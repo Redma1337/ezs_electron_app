@@ -3,7 +3,7 @@
   "productName": "ezs_electron_app",
   "version": "1.0.0",
   "description": "My Electron application description",
-  "main": ".webpack/main",
+  "main": ".vite/build/main.js",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
@@ -18,14 +18,14 @@
     "@electron-forge/maker-squirrel": "^7.3.0",
     "@electron-forge/maker-zip": "^7.3.0",
     "@electron-forge/plugin-auto-unpack-natives": "^7.3.0",
-    "@electron-forge/plugin-fuses": "^7.2.0",
-    "@electron-forge/plugin-webpack": "^7.3.0",
+    "@electron-forge/plugin-fuses": "^7.3.0",
+    "@electron-forge/plugin-vite": "^7.3.0",
     "@electron/fuses": "^1.7.0",
-    "@vercel/webpack-asset-relocator-loader": "^1.7.3",
-    "css-loader": "^6.10.0",
+    "autoprefixer": "^10.4.18",
     "electron": "29.1.0",
-    "node-loader": "^2.0.0",
-    "style-loader": "^3.3.4"
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.1.5"
   },
   "keywords": [],
   "author": {
@@ -34,6 +34,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0"
+    "electron-squirrel-startup": "^1.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }
