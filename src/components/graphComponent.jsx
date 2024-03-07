@@ -7,11 +7,16 @@ import graph from "../engine/graph";
 
 const GraphComponent = () => {
     const [graphState, dispatchGraph] = useReducer(graphReducer, new Graph());
+
+    //TODO: handle the input fields in a separate component
     const [newActivityTask, setNewActivityTask] = useState('');
     const [sourceId, setSourceId] = useState('');
     const [targetId, setTargetId] = useState('');
 
+    //centralize the state management to this function to keep it all in place
+    //don't use es6 function syntax, otherwise function won't be hoisted
     function graphReducer(graph, action) {
+        //TODO: add the missing action types and implement their logic
         switch (action.type) {
             case 'addActivity':
                 const newActivity = new Activity(graph.activities.length + 1, action.payload.task);
@@ -31,11 +36,13 @@ const GraphComponent = () => {
     }
 
     const handleAddActivity = () => {
+        //trigger action on our reducer
         dispatchGraph({ 
             type: 'addActivity', 
             payload: { task: newActivityTask } 
         });
 
+        //update the state in some way to trigger a reload
         setNewActivityTask("");
     };
 
