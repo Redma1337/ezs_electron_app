@@ -1,8 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-const ActivityComponent = ({activity}) => {
+const ActivityComponent = ({ activity, position, onDrag }) => {
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+    const handleMouseDown = (event) => {
+        setIsDragging(true);
+        setDragOffset({
+            x: event.clientX - position.x,
+            y: event.clientY - position.y
+        });
+    };
+
+    const handleMouseMove = (event) => {
+        if (isDragging) {
+            const newX = event.clientX - dragOffset.x;
+            const newY = event.clientY - dragOffset.y;
+            onDrag(newX, newY);
+        }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
     return (
-        <div>
+        <div
+            className="shadow bg-white w-fit h-fit p-4 rounded"
+            style={{ position: 'absolute', left: position.x, top: position.y }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+        >
             <p>ID: {activity.id} | Task: {activity.task}</p>
             {
                 activity.outSemaphores.map((value, index) => (

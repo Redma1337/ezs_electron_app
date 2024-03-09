@@ -3,7 +3,7 @@ import GraphComponent from "../components/graphComponent";
 
 const App = () => {
     return (
-        <div className="p-2 px-4 shadow">
+        <div className="w-full h-full bg-black">
             <GraphComponent/>
         </div>
     )

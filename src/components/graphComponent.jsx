@@ -2,11 +2,10 @@ import React, {useReducer, useState} from 'react';
 import Graph from '../engine/graph';
 import Activity from "../engine/activity";
 import ActivityComponent from "./acitvityComponent";
-import activity from "../engine/activity";
-import graph from "../engine/graph";
 
 const GraphComponent = () => {
     const [graphState, dispatchGraph] = useReducer(graphReducer, new Graph());
+    const [activityComponents, setActivityComponents] = useState([]);
 
     //TODO: handle the input fields in a separate component
     const [newActivityTask, setNewActivityTask] = useState('');
@@ -36,6 +35,8 @@ const GraphComponent = () => {
     }
 
     const handleAddActivity = () => {
+        const newActivity = new Activity(graphState.activities.length + 1, newActivityTask);
+
         //trigger action on our reducer
         dispatchGraph({ 
             type: 'addActivity', 
@@ -44,6 +45,8 @@ const GraphComponent = () => {
 
         //update the state in some way to trigger a reload
         setNewActivityTask("");
+
+        setActivityComponents([...activityComponents, { activity: newActivity, position: { x: 0, y: 0 } }]);
     };
 
     const handleConnectActivities = () => {
@@ -56,9 +59,30 @@ const GraphComponent = () => {
         setTargetId("")
     };
 
+    const handleDrag = (index, deltaX, deltaY) => {
+        const updatedComponents = [...activityComponents];
+        updatedComponents[index].position.x = deltaX;
+        updatedComponents[index].position.y = deltaY;
+        setActivityComponents(updatedComponents);
+    };
+
     return (
-        <div>
-            <div className="flex gap-5">
+        <div className="bg-gray-200 w-full h-full flex">
+            <div
+                className="bg-red-400 h-screen w-full"
+            >
+                {
+                    activityComponents.map((component, index) => (
+                        <ActivityComponent
+                            key={index}
+                            activity={component.activity}
+                            position={component.position}
+                            onDrag={(deltaX, deltaY) => handleDrag(index, deltaX, deltaY)}
+                        />
+                    ))
+                }
+            </div>
+            <div className="h-full bg-black flex flex-col gap-5 p-4">
                 <input
                     type="text"
                     value={newActivityTask}
@@ -66,36 +90,20 @@ const GraphComponent = () => {
                     placeholder="New Activity Task"
                     className="rounded p-2 px-4 w-full shadow"
                 />
-                <button className="rounded p-2 px-4 bg-cyan-500 text-nowrap" onClick={handleAddActivity}>Add Activity</button>
+                <input
+                    type="text"
+                    value={newActivityTask}
+                    onChange={e => setNewActivityTask(e.target.value)}
+                    placeholder="New Activity Task"
+                    className="rounded p-2 px-4 w-full shadow"
+                />
+                <button
+                    className="text-white bg-blue-700 p-2 px-4 rounded shadow"
+                    onClick={handleAddActivity}
+                >
+                    Add Activity
+                </button>
             </div>
-            <div className="flex flex-col gap-5 mt-2">
-                <div className="flex flex-col text-nowrap">
-                    Source Activity ID:
-                    <input
-                        type="number"
-                        value={sourceId}
-                        onChange={e => setSourceId(e.target.value)}
-                        placeholder="Source Activity ID"
-                        className="rounded p-2 px-4 shadow"
-                    />
-                </div>
-                <div className="flex flex-col text-nowrap">
-                    Target Activity ID:
-                    <input
-                        type="number"
-                        value={targetId}
-                        onChange={e => setTargetId(e.target.value)}
-                        placeholder="Target Activity ID"
-                        className="rounded p-2 px-4 shadow"
-                    />
-                </div>
-                <button className="rounded p-2 px-4 bg-cyan-500" onClick={handleConnectActivities}>Connect Activities</button>
-            </div>
-            {
-                graphState.activities.map((activity, index) => (
-                    <ActivityComponent key={index} activity={activity}/>
-                ))
-            }
         </div>
     );
 }
