@@ -1,6 +1,7 @@
-import React, {useReducer, useState} from 'react';
+import React, { useReducer, useState } from 'react';
 import Graph from '../engine/graph';
 import Activity from "../engine/activity";
+import Mutex from "../engine/mutex";
 import ActivityComponent from "./acitvityComponent";
 
 const GraphComponent = () => {
@@ -12,6 +13,9 @@ const GraphComponent = () => {
     const [sourceId, setSourceId] = useState('');
     const [targetId, setTargetId] = useState('');
 
+    const [newMutexName, setNewMutexName] = useState('');
+    const [selectedActivityId, setSelectedActivityId] = useState('');
+
     //centralize the state management to this function to keep it all in place
     //don't use es6 function syntax, otherwise function won't be hoisted
     function graphReducer(graph, action) {
@@ -21,6 +25,16 @@ const GraphComponent = () => {
                 const newActivity = new Activity(graph.activities.length + 1, action.payload.task);
                 graph.addActivity(newActivity);
                 return graph;
+
+            case 'addMutexToActivity': {
+                const { activityId, mutexName } = action.payload;
+                
+                //NEW better code: 
+                graph.addMutexToActivity(mutexName, activityId);
+                return graph;
+            }
+
+
             case 'connectActivities':
                 const { sourceId, targetId } = action.payload;
                 const sourceIdActivity = graph.activities.find(a => a.id === parseInt(sourceId));
@@ -38,9 +52,9 @@ const GraphComponent = () => {
         const newActivity = new Activity(graphState.activities.length + 1, newActivityTask);
 
         //trigger action on our reducer
-        dispatchGraph({ 
-            type: 'addActivity', 
-            payload: { task: newActivityTask } 
+        dispatchGraph({
+            type: 'addActivity',
+            payload: { task: newActivityTask }
         });
 
         //update the state in some way to trigger a reload
@@ -49,10 +63,35 @@ const GraphComponent = () => {
         setActivityComponents([...activityComponents, { activity: newActivity, position: { x: 0, y: 0 } }]);
     };
 
+
+
+    // function to add Mutex to activity
+    const handleAddMutexToActivity = () => {
+        if (!selectedActivityId || !newMutexName.trim()) {
+            alert("Please select an activity and enter a mutex name.");
+            return;
+        }
+
+        dispatchGraph({
+            type: 'addMutexToActivity',
+            payload: {
+                activityId: selectedActivityId,
+                mutexName: newMutexName,
+            }
+        });
+
+        setNewMutexName("");
+        setSelectedActivityId('');
+    };
+
+
+
+
+
     const handleConnectActivities = () => {
-        dispatchGraph({ 
-            type: 'connectActivities', 
-            payload: { sourceId, targetId } 
+        dispatchGraph({
+            type: 'connectActivities',
+            payload: { sourceId, targetId }
         });
 
         setSourceId("")
@@ -90,13 +129,6 @@ const GraphComponent = () => {
                     placeholder="New Activity Task"
                     className="rounded p-2 px-4 w-full shadow"
                 />
-                <input
-                    type="text"
-                    value={newActivityTask}
-                    onChange={e => setNewActivityTask(e.target.value)}
-                    placeholder="New Activity Task"
-                    className="rounded p-2 px-4 w-full shadow"
-                />
                 <button
                     className="text-white bg-blue-700 p-2 px-4 rounded shadow"
                     onClick={handleAddActivity}
@@ -104,6 +136,39 @@ const GraphComponent = () => {
                     Add Activity
                 </button>
             </div>
+
+
+
+            {/* add Mutex to Activity */}
+            <div className="h-full bg-black flex flex-col gap-5 p-4">
+                <input
+                    type="text"
+                    value={newMutexName}
+                    onChange={e => setNewMutexName(e.target.value)}
+                    placeholder="Mutex Name"
+                    className="rounded p-2 px-4 w-full shadow"
+                />
+
+                <select
+                    className="rounded m-2 p-2 px-4 shadow"
+                    value={selectedActivityId}
+                    onChange={e => setSelectedActivityId(e.target.value)}
+                >
+                    <option value="">Choose Activity</option>
+                    {activityComponents.map((component, index) => (
+                        <option key={index} value={component.activity.id}>
+                            {component.activity.task}
+                        </option>
+                    ))}
+                </select>
+                <button
+                    className="text-white bg-blue-700 p-2 px-4 rounded shadow mt-2"
+                    onClick={handleAddMutexToActivity}
+                >
+                    Add Mutex to Activity
+                </button>
+            </div>
+
         </div>
     );
 }

@@ -4,7 +4,29 @@ class Activity {
         this.task = task;
         this.outSemaphores = [];
         this.inSemaphores = [];
+        this.mutexe = []; 
+    }
+
+    // Method to add a semaphore to the activity (Marc)
+
+
+    // Method to assign a mutex to this activity
+    assignMutex(mutex) {
+        // only add if not exists
+        const exists = this.mutexe.some(m => m.mutexName === mutex.mutexName);
+        if (!exists) {
+            this.mutexe.push(mutex);
+        }
+    }
+
+
+
+
+    //TODO later
+    // remove a mutex from an activity      
+    removeMutex(mutexName) {
+        this.mutexe = this.mutexe.filter(m => m.mutexName !== mutexName);
     }
 }
 
-export default  Activity;
+export default Activity;
