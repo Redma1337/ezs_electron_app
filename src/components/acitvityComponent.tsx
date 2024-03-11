@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
+import Activity from "../engine/activity";
 
-const ActivityComponent = ({ activity, position, onDrag }) => {
+type ActivityComponentProps = {
+    activity: Activity;
+    position: { x: number; y: number };
+    onDrag: (x: number, y: number) => void;
+}
+
+const ActivityComponent = ({ activity, position, onDrag }: ActivityComponentProps) => {
     const [isDragging, setIsDragging] = useState(false);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-    const handleMouseDown = (event) => {
+    const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
         setIsDragging(true);
         setDragOffset({
             x: event.clientX - position.x,
@@ -12,7 +19,7 @@ const ActivityComponent = ({ activity, position, onDrag }) => {
         });
     };
 
-    const handleMouseMove = (event) => {
+    const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
         if (isDragging) {
             const newX = event.clientX - dragOffset.x;
             const newY = event.clientY - dragOffset.y;

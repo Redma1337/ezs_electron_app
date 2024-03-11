@@ -14,7 +14,7 @@ const GraphComponent = () => {
 
     //centralize the state management to this function to keep it all in place
     //don't use es6 function syntax, otherwise function won't be hoisted
-    function graphReducer(graph, action) {
+    function graphReducer(graph: Graph, action: any) {
         //TODO: add the missing action types and implement their logic
         switch (action.type) {
             case 'addActivity':
@@ -23,11 +23,7 @@ const GraphComponent = () => {
                 return graph;
             case 'connectActivities':
                 const { sourceId, targetId } = action.payload;
-                const sourceIdActivity = graph.activities.find(a => a.id === parseInt(sourceId));
-                const targetIdActivity = graph.activities.find(a => a.id === parseInt(targetId));
-                if (sourceIdActivity && targetIdActivity) {
-                    graph.connect(sourceIdActivity, targetIdActivity, false);
-                }
+                graph.connect(sourceId, targetId, false);
                 return graph;
             default:
                 return graph;
@@ -59,7 +55,7 @@ const GraphComponent = () => {
         setTargetId("")
     };
 
-    const handleDrag = (index, deltaX, deltaY) => {
+    const handleDrag = (index: number, deltaX: number, deltaY: number) => {
         const updatedComponents = [...activityComponents];
         updatedComponents[index].position.x = deltaX;
         updatedComponents[index].position.y = deltaY;
