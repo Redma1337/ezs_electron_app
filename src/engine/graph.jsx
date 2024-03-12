@@ -11,63 +11,41 @@ class Graph {
         this.activities.push(activity);
     }
 
-
-    //1.
-    addMutexToActivity(mutexName, activityId) {
+    addOrUpdateMutex(mutexName, activityId, priority) {
         // Find the mutex by name. If it doesn't exist, undefined will be returned
-        let mutexToUpdate = this.mutexe.find(m => m.mutexName === mutexName);
+        let mutexToUpdate = this.getMutexByName(mutexName);
 
         // Mutex exists
-        if (mutexToUpdate) {
-            if (!mutexToUpdate.activityList.includes(activityId)) { // Find activity ID in mutex
-
-                mutexToUpdate.addActivityId(activityId);  // Add new activity ID to existing mutex
-                console.log(`Added Activity ID ${activityId} to existing Mutex '${mutexName}'.`);
-            } else {
-                console.log(`Activity ID ${activityId} already exists in Mutex '${mutexName}'.`);
-            }
-
-            // Mutex does not exist
-        } else {
-            this.addMutex(mutexName, [activityId]); // Add the new mutex
-            console.log(`New Mutex: '${mutexName}' - Activity ID: [${activityId}].`);
+        if (mutexToUpdate && !mutexToUpdate.activityMap.hasOwnProperty(activityId)) {
+            mutexToUpdate.addActivityId(activityId, priority);  // Add new activity ID to existing mutex
+            console.log(`Added Activity ID ${activityId} to existing Mutex '${mutexName}'.`);
+            return;
         }
 
-        // Update the activity with the mutex reference
-        this.updateActivityWithMutex(mutexName, activityId);
+        // Mutex exists and activity ID already exists
+        if (mutexToUpdate && mutexToUpdate.activityMap.hasOwnProperty(activityId)) {
+            console.error(`Activity ID ${activityId} already exists in Mutex '${mutexName}'.`);
+            return;
+        }
 
-        // For debugging: log the updated mutexe list
-        console.log("-- Summary --");
-        console.log("Updated Mutexe:", this.mutexe.map(m => `${m.mutexName}: [${m.activityList}]`));
-        // Activities with their referenced mutexes
-        console.log("Updated Activities:", this.activities.map(a => `${a.id}: ${a.task} - Mutexe: ${
-            a.mutexe && a.mutexe.length > 0 
-            ? a.mutexe.map(m => `${m.mutexName} (Activities: [${m.activityList.join(", ")}])`).join("; ") 
-            : 'None'
-        }`));
+        // Mutex does not exist
+        if (!mutexToUpdate) {
+            this.createMutex(mutexName, [activityId], priority); // Add the new mutex
+            console.log(`New Mutex: '${mutexName}' - Activity ID: [${activityId}].`);
+            return;
+        }
     }
 
-    //2. create Mutex -> private???
-    addMutex(mutexName, activityId) {
-        const mutex = new Mutex(mutexName, [activityId]);
+    createMutex(mutexName, activityId, priority) {
+        const mutex = new Mutex(mutexName);
+        mutex.addActivityId(activityId, priority);
         this.mutexe.push(mutex);
     }
 
-    //3. add Mutex Reference to Activity -> private???
-    updateActivityWithMutex(mutexName, activityId) {
-        // Find the mutex by name -> again beacuse could be new mutex 
-        const mutex = this.mutexe.find(m => m.mutexName === mutexName);
 
-        // Find the activity by ID and assign the mutex to it
-        const activityToUpdate = this.activities.find(a => a.id === parseInt(activityId));
-        if (activityToUpdate) {
-            activityToUpdate.assignMutex(mutex); // Pass the Mutex object
-            console.log(`Assigned mutex '${mutexName}' to activity with ID ${activityId}.`);
-        } else {
-            alert(`Activity with ID ${activityId} not found.`);
-        }
+    getMutexByName(mutexName) {
+        return this.mutexe.find(m => m.mutexName === mutexName);
     }
-
 
     connect(sourceActivity, targetActivity, isActive) {
         //this shares a reference of the semaphore to both activities which makes controlling bot easy
@@ -77,21 +55,113 @@ class Graph {
         targetActivity.inSemaphores.push(connection);
     }
 
+    // Only for debugging
+    seeAssignedMutexes() {
+        console.log("");
+        console.log("-- Activities --");
+        this.activities.forEach(a => {
+            const assignedMutexes = a.mutexe.map(m => m.mutexName).join(", ") || 'None';
+            console.log(`Activity ${a.id} (${a.task}): Mutexes - ${assignedMutexes}`);
+        });
+        console.log("");
+        console.log("-- Mutexes --");
+        this.mutexe.forEach(mutex => {
+            console.log(`Mutex '${mutex.mutexName}': Status - ${mutex.status}`);
+            if (Object.keys(mutex.activityMap).length > 0) {
+                console.log("Activities:");
+                Object.entries(mutex.activityMap).forEach(([activityId, priority]) => {
+                    console.log(`- ID ${activityId} (Prio: ${priority})`);
+                });
+            } else {
+                console.log("- No activities");
+            }
+        });
+
+    }
+
+    sortNodesByMutexPriority(nodes) {
+        const nodePriorities = nodes.map(node => {
+            let highestPriority = -Infinity;
+
+            this.mutexe.forEach(mutex => {
+                const nodePriority = mutex.getPrioOfActivity(node.id);
+                if (nodePriority !== null && nodePriority > highestPriority) {
+                    highestPriority = nodePriority;
+                }
+            });
+
+            return {
+                node,
+                highestPriority: highestPriority === -Infinity ? "No priority" : highestPriority
+            };
+        });
+
+        // Unsorted Nodes
+        console.log("Unsorted Nodes:");
+        nodePriorities.forEach(np => console.log(`- ${np.node.task} - Prio: ${np.highestPriority}`));
+
+        // Sorting nodes based on mutex priority
+        nodePriorities.sort((a, b) => b.highestPriority - a.highestPriority);
+
+        // Sorted nodes
+        console.log("Sorted nodes:");
+        nodePriorities.forEach(np => console.log(`- ${np.node.task} - Prio: ${np.highestPriority}`));
+        console.log("");
+
+        return nodePriorities.map(np => np.node);
+    }
+
     walk() {
-        //search for nodes that have only active semaphores
-        const validNodes = this.activities.filter(activity => activity.inSemaphores.every(semaphore => semaphore.isActive));
+        // Search for nodes that have only active input semaphores
+        let validNodes = this.activities.filter(activity => activity.inSemaphores.every(semaphore => semaphore.isActive));
+
+        // Unlock mutex after processing 
+        this.mutexe.forEach(mutex => mutex.unblock());
+
+        // Remove mutex from activity
+        this.activities.forEach(activity => activity.removeMutexe());
+
+        // Sort nodes by their priority in each mutex they're part of.
+        validNodes = this.sortNodesByMutexPriority(validNodes);
 
         validNodes.forEach(activity => {
-            //all semaphores pointing to the node (which are active) are disabled
-            activity.inSemaphores.forEach(inSemaphore => {
-                inSemaphore.isActive = false;
-            });
+            // each mutex related to the activity
+            this.mutexe.forEach(mutex => {
+                const currentMutex = this.getMutexByName(mutex.mutexName);
 
-            //outgoing semaphores become active, effectively passing the state of the in semaphores to the out semaphores
-            activity.outSemaphores.forEach(outSemaphore => {
-                outSemaphore.isActive = true;
+                // check for activity ID mutex's activityMap
+                if (currentMutex && currentMutex.activityMap.hasOwnProperty(activity.id)) {
+
+                    // Check status 
+                    if (currentMutex.getStatus() === "free") {
+                        // Lock the mutex and update semaphore states
+
+                        currentMutex.block();
+                        activity.assignMutex(currentMutex);
+
+                        //walk()
+                        activity.inSemaphores.forEach(inSemaphore => {
+                            inSemaphore.isActive = false;
+                        });
+
+                        activity.outSemaphores.forEach(outSemaphore => {
+                            outSemaphore.isActive = true;
+                        });
+                    } else {
+                        console.log(`Mutex ${currentMutex.mutexName} is blocked.`);
+                    }
+                } else {
+                    activity.inSemaphores.forEach(inSemaphore => {
+                        inSemaphore.isActive = false;
+                    });
+
+                    activity.outSemaphores.forEach(outSemaphore => {
+                        outSemaphore.isActive = true;
+                    });
+                }
             });
         });
+        //mutex.grantPermission();
     }
 
     print() {
@@ -105,8 +175,35 @@ class Graph {
                 console.log(activity.task, " out ", semaphore.isActive)
             })
             console.log();
+
         })
+        console.log("--------------------------");
     }
+
+
+    printSemaphores() {
+        console.log("-- Active Semaphores --");
+
+        // in all activities
+        this.activities.forEach(activity => {
+            activity.outSemaphores.forEach(semaphore => { // For each outsemaphore in the activity
+                // get target activity for this semaphore
+                const targetActivity = this.activities.find(a => a.inSemaphores.includes(semaphore));
+
+                if (targetActivity) {
+                    // Determine the status of the connection based on the semaphore's active state
+                    const status = semaphore.isActive ? "Active" : " - ";
+                    console.log(`${activity.task} -> ${targetActivity.task}: ${status}`);
+                }
+            });
+        });
+        this.seeAssignedMutexes();
+        console.log("--------------------------");
+        console.log("");
+    }
+
+
+
 }
 
 export default Graph;

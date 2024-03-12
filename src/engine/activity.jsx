@@ -4,7 +4,7 @@ class Activity {
         this.task = task;
         this.outSemaphores = [];
         this.inSemaphores = [];
-        this.mutexe = []; 
+        this.mutexe = [];
     }
 
     // Method to add a semaphore to the activity (Marc)
@@ -24,8 +24,8 @@ class Activity {
 
     //TODO later
     // remove a mutex from an activity      
-    removeMutex(mutexName) {
-        this.mutexe = this.mutexe.filter(m => m.mutexName !== mutexName);
+    removeMutexe() {
+        this.mutexe = [];
     }
 }
 

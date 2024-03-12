@@ -1,19 +1,40 @@
 class Mutex {
-    constructor(mutexName, activityList = []) {
+    constructor(mutexName) {
         this.mutexName = mutexName;
-        this.activityList = activityList;
-        //this.priority = priority;
+        this.activityMap = {};
+        this.status = "free";
     }
 
-    // Method to add an activity ID to the mutex list
-    addActivityId(activityId) {
-        if (!this.activityList.includes(activityId)) {
-            this.activityList.push(activityId);
+    addActivityId(activityId, priority) {
+        if (!this.activityMap.hasOwnProperty(activityId)) {
+            this.activityMap[activityId] = priority;
         }
     }
 
-    // Get Priority of Mutex
+    // Corrected to use object property access
+    getPrioOfActivity(activityId) {
+        if (this.activityMap.hasOwnProperty(activityId)) {
+            return this.activityMap[activityId];
+        }
+        return null;
+    }
 
+    // Status
+    block() {
+        this.status = "blocked";
+    }
+    unblock() {
+        this.status = "free";
+    }
+    getStatus() {
+        return this.status;
+    }
+
+    // Remove - later 
+    // remove activity ID from the mutex map 
+    removeActivityId(activityId) {
+        delete this.activityMap[activityId];
+    }
 }
 
 export default Mutex;

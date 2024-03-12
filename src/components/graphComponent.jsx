@@ -1,4 +1,4 @@
-import React, { useReducer, useState } from 'react';
+import React, { useReducer, useState, useEffect } from 'react';
 import Graph from '../engine/graph';
 import Activity from "../engine/activity";
 import Mutex from "../engine/mutex";
@@ -16,6 +16,10 @@ const GraphComponent = () => {
     const [newMutexName, setNewMutexName] = useState('');
     const [selectedActivityId, setSelectedActivityId] = useState('');
 
+    useEffect(() => {
+        dispatchGraph({ type: 'initializeGraph' });
+    }, []); 
+
     //centralize the state management to this function to keep it all in place
     //don't use es6 function syntax, otherwise function won't be hoisted
     function graphReducer(graph, action) {
@@ -28,12 +32,42 @@ const GraphComponent = () => {
 
             case 'addMutexToActivity': {
                 const { activityId, mutexName } = action.payload;
-                
-                //NEW better code: 
-                graph.addMutexToActivity(mutexName, activityId);
+                graph.addOrUpdateMutex(mutexName, activityId);
                 return graph;
             }
 
+            case 'initializeGraph':
+                const activity1 = new Activity(1, "Task 1");
+                const activity2 = new Activity(2, "Task 2");
+                const activity3 = new Activity(3, "Task 3");
+                const activity4 = new Activity(4, "Task 4");
+                const activity5a = new Activity(5, "Task 5a");
+                const activity5b = new Activity(6, "Task 5b");
+                const activity6 = new Activity(7, "Task 6");
+                
+                graph.addActivity(activity1);
+                graph.addActivity(activity2);
+                graph.addActivity(activity3);
+                graph.addActivity(activity4);
+                graph.addActivity(activity5a);
+                graph.addActivity(activity5b);
+                graph.addActivity(activity6);
+
+                graph.connect(activity1, activity2, false);
+                graph.connect(activity1, activity3, false);
+                graph.connect(activity2, activity4, false);
+                graph.connect(activity3, activity6, false);
+                graph.connect(activity4, activity6, false);
+                graph.connect(activity6, activity5a, false);
+                graph.connect(activity5a, activity5b, false);
+                graph.connect(activity5b, activity5a, true);
+                graph.connect(activity5b, activity1, true);
+
+                graph.addOrUpdateMutex("m234", 2, 7);
+                graph.addOrUpdateMutex("m234", 3, 9);
+                graph.addOrUpdateMutex("m234", 4, 5);
+
+                return graph;
 
             case 'connectActivities':
                 const { sourceId, targetId } = action.payload;
@@ -43,6 +77,7 @@ const GraphComponent = () => {
                     graph.connect(sourceIdActivity, targetIdActivity, false);
                 }
                 return graph;
+
             default:
                 return graph;
         }
@@ -105,6 +140,12 @@ const GraphComponent = () => {
         setActivityComponents(updatedComponents);
     };
 
+    const handleWalk = () => {
+        graphState.walk();
+        //graphState.print();
+        graphState.printSemaphores();
+    }
+
     return (
         <div className="bg-gray-200 w-full h-full flex">
             <div
@@ -166,6 +207,15 @@ const GraphComponent = () => {
                     onClick={handleAddMutexToActivity}
                 >
                     Add Mutex to Activity
+                </button>
+            </div>
+
+            <div className="h-full bg-black flex flex-col gap-5 p-2">
+                <button
+                    className="text-white bg-blue-700 p-2 px-4 rounded shadow mt-2"
+                    onClick={handleWalk}
+                >
+                    walk
                 </button>
             </div>
 
