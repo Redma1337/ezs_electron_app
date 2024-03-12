@@ -32,7 +32,7 @@ const GraphComponent = () => {
 
             case 'addMutexToActivity': {
                 const { activityId, mutexName } = action.payload;
-                graph.addOrUpdateMutex(mutexName, activityId);
+                graph.addOrUpdateMutex(mutexName, activityId, 1);
                 return graph;
             }
 
@@ -53,15 +53,15 @@ const GraphComponent = () => {
                 graph.addActivity(activity5b);
                 graph.addActivity(activity6);
 
-                graph.connect(activity1, activity2, false);
-                graph.connect(activity1, activity3, false);
-                graph.connect(activity2, activity4, false);
-                graph.connect(activity3, activity6, false);
-                graph.connect(activity4, activity6, false);
-                graph.connect(activity6, activity5a, false);
-                graph.connect(activity5a, activity5b, false);
-                graph.connect(activity5b, activity5a, true);
-                graph.connect(activity5b, activity1, true);
+                graph.connect(activity1.id, activity2.id, false);
+                graph.connect(activity1.id, activity3.id, false);
+                graph.connect(activity2.id, activity4.id, false);
+                graph.connect(activity3.id, activity6.id, false);
+                graph.connect(activity4.id, activity6.id, false);
+                graph.connect(activity6.id, activity5a.id, false);
+                graph.connect(activity5a.id, activity5b.id, false);
+                graph.connect(activity5b.id, activity5a.id, true);
+                graph.connect(activity5b.id, activity1.id, true);
 
                 graph.addOrUpdateMutex("m234", 2, 7);
                 graph.addOrUpdateMutex("m234", 3, 9);
