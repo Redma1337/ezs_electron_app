@@ -1,48 +1,56 @@
-type ActivityPriorityMap = Record<string, number>;
-
 enum MutexStatus {
     Free = "free",
     Blocked = "blocked",
 }
 
 class Mutex {
+    public readonly id: number;
     public readonly mutexName: string;
-    public activityMap: ActivityPriorityMap;
-    public status: MutexStatus;
+    public readonly activityMap: Map<number, number>;
+    private status: MutexStatus;
 
-    constructor(mutexName: string) {
+    constructor(id: number, mutexName: string) {
+        this.id = id;
         this.mutexName = mutexName;
-        this.activityMap = {};
+        this.activityMap = new Map<number, number>();
         this.status = MutexStatus.Free;
     }
 
-    addActivityId(activityId: number, priority: number): void {
-        if (!Object.hasOwnProperty.call(this.activityMap, activityId)) {
-            this.activityMap[activityId] = priority;
+    addActivityId(activityId: number, priority: number) {
+        if (!this.activityMap.has(activityId)) {
+            this.activityMap.set(activityId, priority);
         }
     }
 
     getPrioOfActivity(activityId: number): number | null {
-        if (Object.hasOwnProperty.call(this.activityMap, activityId)) {
-            return this.activityMap[activityId];
+        if (this.activityMap.has(activityId)) {
+            return this.activityMap.get(activityId);
         }
         return null;
     }
 
+    containsActivity(activityId: number): boolean {
+        if(this.activityMap.has(activityId)) {
+            return true;
+        }
+        return false;
+    }
+
     // Status
-    block(): void {
+    block() {
         this.status = MutexStatus.Blocked;
     }
-    unblock(): void {
+    unblock() {
         this.status = MutexStatus.Free;
     }
     getStatus(): MutexStatus {
         return this.status;
     }
 
-    removeActivityId(activityId: number): void {
-        delete this.activityMap[activityId];
+    removeActivityId(activityId: number) {
+        this.activityMap.delete(activityId);
     }
+    
 }
 
 export default Mutex;
