@@ -2,10 +2,22 @@ import React, {useReducer, useState} from 'react';
 import Graph from '../engine/graph';
 import Activity from "../engine/activity";
 import ActivityComponent from "./acitvityComponent";
+import {Edge, Node, ReactFlow, useEdgesState, useNodesState} from "reactflow";
+import 'reactflow/dist/style.css';
+
+const initialNodes: Node[] = [
+    { id: '1', data: { label: 'Node 1' }, position: { x: 5, y: 5 } },
+    { id: '2', data: { label: 'Node 2' }, position: { x: 5, y: 100 } },
+];
+
+const initialEdges: Edge[] = [{ id: 'e1-2', source: '1', target: '2' }];
 
 const GraphComponent = () => {
     const [graphState, dispatchGraph] = useReducer(graphReducer, new Graph());
     const [activityComponents, setActivityComponents] = useState([]);
+
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 
     //TODO: handle the input fields in a separate component
     const [newActivityTask, setNewActivityTask] = useState('');
@@ -62,44 +74,23 @@ const GraphComponent = () => {
         setActivityComponents(updatedComponents);
     };
 
+
+
+
     return (
         <div className="bg-gray-200 w-full h-full flex">
-            <div
-                className="bg-red-400 h-screen w-full"
+            <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                fitView
+                minZoom={1}
+                maxZoom={4}
+                attributionPosition="bottom-left"
             >
-                {
-                    activityComponents.map((component, index) => (
-                        <ActivityComponent
-                            key={index}
-                            activity={component.activity}
-                            position={component.position}
-                            onDrag={(deltaX, deltaY) => handleDrag(index, deltaX, deltaY)}
-                        />
-                    ))
-                }
-            </div>
-            <div className="h-full bg-black flex flex-col gap-5 p-4">
-                <input
-                    type="text"
-                    value={newActivityTask}
-                    onChange={e => setNewActivityTask(e.target.value)}
-                    placeholder="New Activity Task"
-                    className="rounded p-2 px-4 w-full shadow"
-                />
-                <input
-                    type="text"
-                    value={newActivityTask}
-                    onChange={e => setNewActivityTask(e.target.value)}
-                    placeholder="New Activity Task"
-                    className="rounded p-2 px-4 w-full shadow"
-                />
-                <button
-                    className="text-white bg-blue-700 p-2 px-4 rounded shadow"
-                    onClick={handleAddActivity}
-                >
-                    Add Activity
-                </button>
-            </div>
+
+            </ReactFlow>
         </div>
     );
 }
