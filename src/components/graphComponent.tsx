@@ -32,7 +32,7 @@ const GraphComponent = () => {
 
             case 'addMutexToActivity': {
                 const { activityId, mutexName } = action.payload;
-                graph.addOrUpdateMutex(graph.mutexe.length + 1, mutexName, activityId, 1);
+                graph.addOrUpdateMutex(mutexName, activityId, 1);
                 return graph;
             }
 
@@ -63,9 +63,11 @@ const GraphComponent = () => {
                 graph.connect(activity5b.id, activity5a.id, true);
                 graph.connect(activity5b.id, activity1.id, true);
 
-                graph.addOrUpdateMutex(1, "m234", 2, 7);
-                graph.addOrUpdateMutex(1, "m234", 3, 9);
-                graph.addOrUpdateMutex(1, "m234", 4, 5);
+                graph.addOrUpdateMutex("m23", 2, 4); 
+                graph.addOrUpdateMutex("m23", 3, 2); //Priority should be assigned to activity! otherwise it will be added twice - TODO
+           
+                graph.addOrUpdateMutex("m34", 3, 2); //Priority should be assigned to activity! otherwise it will be added twice - TODO
+                graph.addOrUpdateMutex("m34", 4, 8);
 
                 return graph;
 

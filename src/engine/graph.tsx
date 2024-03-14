@@ -1,28 +1,32 @@
 import Semaphore from "./semaphore";
 import Activity from "./activity";
 import Mutex from "./mutex";
-//import MutexHandler from "./mutexHandler";
+import MutexHandler from "./mutexHandler";
 import { c } from "vite/dist/node/types.d-FdqQ54oU";
 
 class Graph {
     public readonly activities: Activity[];
     public readonly mutexe: Mutex[];
+    public mutexHandler: MutexHandler;
 
     constructor() {
         this.activities = [];
         this.mutexe = [];
+        this.mutexHandler = new MutexHandler();
     }
 
     public addActivity(activity: Activity) {
         this.activities.push(activity);
+        this.mutexHandler.fillSortInheritedMap(this.activities, this.mutexe); // once Mutex or Activity is added -> Denkfehler TODO
+        console.log("Inherited Map: ", this.mutexHandler.inheritMap);
     }
 
     private getActivityById(id: number) {
         return this.activities.find(a => a.id === id);
     }
 
-    private getMutexID(id: number): Mutex | undefined {
-        return this.mutexe.find(mutex => mutex.id === id);
+    private getMutexByName(mutexName: string): Mutex | undefined {
+        return this.mutexe.find(mutex => mutex.mutexName === mutexName);
     }
 
     private createMutex(id: number, mutexName: string, activityId: number, priority: number): Mutex {
@@ -32,8 +36,8 @@ class Graph {
         return newMutex;
     }
 
-    public addOrUpdateMutex(id: number, mutexName: string, activityId: number, priority: number) {
-        let mutexToUpdate = this.getMutexID(id);
+    public addOrUpdateMutex(mutexName: string, activityId: number, priority: number) {
+        let mutexToUpdate = this.getMutexByName(mutexName);
 
         // Mutex exists
         if (mutexToUpdate && (!mutexToUpdate.containsActivity(activityId))) {
@@ -50,6 +54,7 @@ class Graph {
 
         // Mutex does not exist
         if (!mutexToUpdate) {
+            let id = this.mutexe.length + 1;
             let newMutex = this.createMutex(id, mutexName, activityId, priority);
             newMutex.addActivityId(activityId, priority);
             console.log(`New Mutex: '${mutexName}' - Activity ID: ${activityId}.`);
@@ -99,95 +104,36 @@ class Graph {
             } else {
                 console.log("- No activities");
             }
-            
+            mutex.sortActivityMap();
+            console.log("Sorted Mutex:", mutex.activityMap);
+            let firstPrio = mutex.getFirstPriority();
+            console.log("First Priority: ", firstPrio);
         });
     }
 
 
-    getHighestMutexPriority(nodes: Activity[]): { node: Activity; highestPriority: string | number }[] {
-        return nodes.map(node => {
-            let highestPriority: number = -Infinity;
+    handleMutexe(validNodes: Activity[]): Activity[] {
 
-            this.mutexe.forEach(mutex => {
-                const nodePriority = mutex.getPrioOfActivity(node.id);
-                if (nodePriority !== null && nodePriority > highestPriority) {
-                    highestPriority = nodePriority;
-                }
-            });
 
-            return {
-                node,
-                highestPriority: highestPriority === -Infinity ? "No priority" : highestPriority
-            };
-        });
+        
+
+        this.mutexHandler.fillSortMutexMap(this.activities, this.mutexe); // once Mutex or Activity is added -> Denkfehler TODO
+        console.log("Mutex Map: ", this.mutexHandler.mutexMap);
+
+        return this.mutexHandler.handleMutex(validNodes, this.mutexe);; // = validNodes 
     }
 
-
-
-    sortNodes(nodes: Activity[]): Activity[] {
-        let nodePriorities = this.getHighestMutexPriority(nodes);
-
-        // Unsorted Nodes
-        console.log("Unsorted Nodes:");
-        nodePriorities.forEach(np => console.log(`- ${np.node.task} - Prio: ${np.highestPriority}`));
-
-        // Sort nodes based on mutex priority
-        nodePriorities.sort((a, b) => {
-            return (typeof b.highestPriority === 'number' ? b.highestPriority : -Infinity) - (typeof a.highestPriority === 'number' ? a.highestPriority : -Infinity);
-        });
-
-        // Sorted nodes
-        console.log("Sorted nodes:");
-        nodePriorities.forEach(np => console.log(`- ${np.node.task} - Prio: ${np.highestPriority}`));
-
-        return nodePriorities.map(np => np.node);
-    }
-    
     walk() {
-        // Unlock mutex after processing 
-        this.mutexe.forEach(mutex => mutex.unblock());
-
-        // Remove mutex from activity
-        this.activities.forEach(activity => activity.removeMutexe());
-
         // Search for nodes that have only active input semaphores
         let validNodes = this.activities.filter(activity => activity.isValid());
 
-        
-        // sort nodes by mutex priority
-        validNodes = this.sortNodes(validNodes);
+        // sort and filter nodes by mutex priority 
+        validNodes = this.handleMutexe(validNodes);
 
-        // valid Notes filter only the one that need to be triggered -> sort, filter, has mutex! 
-
-        validNodes.forEach(activity => {
-            // each mutex related to the activity
-            this.mutexe.forEach(mutex => {
-                const currentMutex = this.getMutexID(mutex.id);
-
-                // check for activity ID mutex's activityMap
-                if (currentMutex && currentMutex.containsActivity(activity.id) && currentMutex.getStatus() === "free") {
-                    currentMutex.block();
-                    activity.assignMutex(currentMutex);
-                    activity.trigger();
-                    return;
-                }
-
-                // activity ID in mutex and blocked
-                if (currentMutex && currentMutex.containsActivity(activity.id) && currentMutex.getStatus() === "blocked") {
-                    console.log("");
-                    console.log(`Mutex ${currentMutex.mutexName} is blocked.`);
-                    console.log(`Activity ${activity.task} is waiting for Mutex ${currentMutex.mutexName}.`);
-                    console.log("");
-                    return;
-                } 
-
-                // no muted related node 
-                if (!currentMutex.containsActivity(activity.id)) {
-                    activity.trigger();
-                    return;
-                }
-            });
-        });
+        validNodes.forEach(activity => activity.trigger());
+        console.log("Walk ende");
+        console.log("");
+        console.log("");
     }
 
     public print() {
@@ -199,13 +145,13 @@ class Graph {
 
     printSemaphores() {
         console.log("-- Active Semaphores --");
-    
+
         this.activities.forEach(activity => {
             // outgoing semaphore of the activity
             activity.outSemaphores.forEach(semaphore => {
                 // get target activity for this semaphore
                 const targetActivity = this.activities.find(a => a.inSemaphores.includes(semaphore));
-    
+
                 if (targetActivity) {
                     const status = semaphore.isActive() ? "Active" : "-";
                     console.log(`${activity.task} -> ${targetActivity.task}: ${status}`);
