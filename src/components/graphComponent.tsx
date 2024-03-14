@@ -1,16 +1,53 @@
-import React, {useReducer, useState} from 'react';
+import React, {useCallback, useReducer, useState} from 'react';
 import Graph from '../engine/graph';
 import Activity from "../engine/activity";
-import ActivityComponent from "./acitvityComponent";
-import {Edge, Node, ReactFlow, useEdgesState, useNodesState} from "reactflow";
-import 'reactflow/dist/style.css';
+import {
+    addEdge, ConnectionMode,
+    Edge, EdgeTypes,
+    MarkerType,
+    Node,
+    NodeTypes,
+    OnConnect,
+    ReactFlow,
+    useEdgesState,
+    useNodesState
+} from "reactflow";
+import ActivityNode from "./flowgraph/acitvityNodeComponent";
+import MutexNode from "./flowgraph/mutexNodeComponent";
+import SimpleFloatingEdge from "./flowgraph/simpleFloatingEdge";
 
 const initialNodes: Node[] = [
-    { id: '1', data: { label: 'Node 1' }, position: { x: 5, y: 5 } },
-    { id: '2', data: { label: 'Node 2' }, position: { x: 5, y: 100 } },
+    { id: '1', data: { label: 'Node 1' }, position: { x: 5, y: 5 }, type: "activity"},
+    { id: '2', data: { label: 'Node 2' }, position: { x: 5, y: 100 }, type: "activity"},
+    { id: '3', data: { label: 'Mutex' }, position: { x: 5, y: 100 }, type: "mutex"},
 ];
 
-const initialEdges: Edge[] = [{ id: 'e1-2', source: '1', target: '2' }];
+const initialEdges: Edge[] = [
+    {
+        id: 'e1-2',
+        source: '1',
+        target: '2',
+        markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 30,
+            height: 30,
+            color: "black"
+        },
+        style: {
+            stroke: "black"
+        },
+        type: "floating"
+    }
+];
+
+const nodeTypes: NodeTypes = {
+    activity: ActivityNode,
+    mutex: MutexNode,
+};
+
+const edgeTypes: EdgeTypes = {
+    floating: SimpleFloatingEdge,
+};
 
 const GraphComponent = () => {
     const [graphState, dispatchGraph] = useReducer(graphReducer, new Graph());
@@ -18,6 +55,11 @@ const GraphComponent = () => {
 
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+
+    const onConnect: OnConnect = useCallback(
+        (connection) => setEdges((eds) => addEdge(connection, eds)),
+        [setEdges],
+    );
 
     //TODO: handle the input fields in a separate component
     const [newActivityTask, setNewActivityTask] = useState('');
@@ -67,16 +109,6 @@ const GraphComponent = () => {
         setTargetId("")
     };
 
-    const handleDrag = (index: number, deltaX: number, deltaY: number) => {
-        const updatedComponents = [...activityComponents];
-        updatedComponents[index].position.x = deltaX;
-        updatedComponents[index].position.y = deltaY;
-        setActivityComponents(updatedComponents);
-    };
-
-
-
-
     return (
         <div className="bg-gray-200 w-full h-full flex">
             <ReactFlow
@@ -84,12 +116,14 @@ const GraphComponent = () => {
                 edges={edges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
-                fitView
+                onConnect={onConnect}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
+                connectionMode={ConnectionMode.Loose}
                 minZoom={1}
                 maxZoom={4}
                 attributionPosition="bottom-left"
             >
-
             </ReactFlow>
         </div>
     );
