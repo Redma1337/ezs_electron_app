@@ -1,30 +1,34 @@
-import React, {useCallback, useReducer, useRef, useState} from 'react';
+import React, {DragEvent, DragEventHandler, useCallback, useEffect, useReducer, useRef, useState} from 'react';
 import Graph from '../engine/graph';
 import Activity from "../engine/activity";
 import {
-    addEdge, Connection, ConnectionMode,
-    Edge, EdgeTypes,
-    MarkerType,
+    addEdge,
+    Background,
+    BackgroundVariant,
+    Connection,
+    ConnectionLineType,
+    ConnectionMode, Controls,
+    Edge,
+    EdgeTypes,
+    MarkerType, MiniMap,
     Node,
     NodeTypes,
-    OnConnect,
-    ReactFlow, updateEdge,
+    OnConnect, Position,
+    ReactFlow, ReactFlowProvider,
+    updateEdge,
     useEdgesState,
-    useNodesState
+    useNodesState, useUpdateNodeInternals
 } from "reactflow";
 import ActivityNode from "./flowgraph/acitvityNode";
 import MutexNode from "./flowgraph/mutexNode";
 import FloatingEdge from "./flowgraph/components/floatingEdge";
-import CustomConnectLine from "./flowgraph/components/customConnectLine";
+import OptionsComponent from "./optionsComponent";
+import {PanelPosition} from "@reactflow/core/dist/esm/types/general";
 
 const initialNodes: Node[] = [
-    { id: '1', data: { label: 'Node 1' }, position: { x: 5, y: 5 }, type: "activity"},
-    { id: '2', data: { label: 'Node 2' }, position: { x: 5, y: 100 }, type: "activity"},
-    { id: '3', data: { label: 'Mutex' }, position: { x: 5, y: 100 }, type: "mutex"},
-];
-
-const initialEdges: Edge[] = [
-
+    { id: '1', data: { label: 'Node 1' }, position: { x: 500, y: 300 }, type: "activity"},
+    { id: '2', data: { label: 'Node 2' }, position: { x: 100, y: 300 }, type: "activity"},
+    { id: '3', data: { label: 'Mutex' }, position: { x: 300, y: 100 }, type: "mutex"},
 ];
 
 const nodeTypes: NodeTypes = {
@@ -53,14 +57,25 @@ const GraphComponent = () => {
     const [graphState, dispatchGraph] = useReducer(graphReducer, new Graph());
     const [activityComponents, setActivityComponents] = useState([]);
 
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const edgeUpdateSuccessful = useRef(true);
+    const [selectedNode, setSelectedNode] = useState<Node>(null);
+    const [reactFlowInstance, setReactFlowInstance] = useState(null);
 
-    const onConnect: OnConnect = useCallback(
-        (connection) => setEdges((eds) => addEdge(connection, eds)),
-        [setEdges],
-    );
+    useEffect(() => {
+        let connection = {
+            id: 'e1-2',
+            source: '1',
+            target: '2'
+        };
+        setEdges((eds) => addEdge(connection, eds));
+        connection = {
+            id: 'e2-1',
+            source: '2',
+            target: '1'
+        };
+        setEdges((eds) => addEdge(connection, eds));
+    }, [])
 
     //TODO: handle the input fields in a separate component
     const [newActivityTask, setNewActivityTask] = useState('');
@@ -85,44 +100,68 @@ const GraphComponent = () => {
         }
     }
 
-    const onEdgeUpdateStart = useCallback(() => {
-        edgeUpdateSuccessful.current = false;
-    }, []);
-
-    const onEdgeUpdate = useCallback((oldEdge: Edge, newConnection: Connection) => {
-        edgeUpdateSuccessful.current = true;
-        setEdges((els) => updateEdge(oldEdge, newConnection, els));
-    }, []);
-
-    const onEdgeUpdateEnd = useCallback((_: any, edge: Edge) => {
-        if (!edgeUpdateSuccessful.current) {
-            setEdges((eds) => eds.filter((e) => e.id !== edge.id));
+    const onNodeDragStart = useCallback((event: React.MouseEvent, node: Node, nodes: Node[]) => {
+        if (!selectedNode || selectedNode.id !== node.id) {
+            setSelectedNode(node);
         }
-
-        edgeUpdateSuccessful.current = true;
     }, []);
+
+    const onDragOver = useCallback((event: DragEvent) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+    }, []);
+
+    const onDrop = useCallback(
+        (event: DragEvent) => {
+            event.preventDefault();
+
+            const type = event.dataTransfer.getData('application/reactflow');
+
+            if (typeof type === 'undefined' || !type) {
+                return;
+            }
+            const position = reactFlowInstance.screenToFlowPosition({
+                x: event.clientX,
+                y: event.clientY,
+            });
+            const newNode = {
+                id: Math.floor(Math.random() * 10000).toString(),
+                type,
+                position,
+                data: { label: `${type} node` },
+            };
+
+            setNodes((nds) => nds.concat(newNode));
+        },
+        [reactFlowInstance],
+    );
 
     return (
-        <div className="bg-gray-200 w-full h-full flex">
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onEdgeUpdate={onEdgeUpdate}
-                onEdgeUpdateStart={onEdgeUpdateStart}
-                onEdgeUpdateEnd={onEdgeUpdateEnd}
-                onConnect={onConnect}
-                nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes}
-                connectionMode={ConnectionMode.Loose}
-                minZoom={1}
-                maxZoom={4}
-                defaultEdgeOptions={defaultEdgeOptions}
-                attributionPosition="bottom-left"
-                connectionLineComponent={CustomConnectLine}
-            >
-            </ReactFlow>
+        <div className="w-full h-full flex shadow">
+            <ReactFlowProvider>
+                <OptionsComponent
+                    targetNode={selectedNode}
+                />
+                <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onDrop={onDrop}
+                    onDragOver={onDragOver}
+                    onInit={setReactFlowInstance}
+                    onNodeDragStart={onNodeDragStart}
+                    nodeTypes={nodeTypes}
+                    edgeTypes={edgeTypes}
+                    connectionMode={ConnectionMode.Loose}
+                    defaultEdgeOptions={defaultEdgeOptions}
+                    attributionPosition="bottom-left"
+                    className="border-l border-l-slate-300 shadow"
+                >
+                    <Background variant={BackgroundVariant.Lines}/>
+                    <Controls position={"bottom-right"}/>
+                </ReactFlow>
+            </ReactFlowProvider>
         </div>
     );
 }

@@ -16,28 +16,18 @@ export default memo(({ id, selected, data }: NodeProps<MutexNodeData>) => {
     const isTarget = connectionNodeId && connectionNodeId !== id;
     const label = isTarget ? 'Drop here' : 'Drag to connect';
 
-    //                    className="w-full h-full bg-blue-400 absolute left-0 rounded-xl opacity-0"
+    //
     return (
-        <div className="shadow bg-white min-w-60 h-fit rounded-xl">
+        <div className="shadow border border-slate-200 bg-white min-w-60 h-fit rounded-xl">
             <div>
+                <Handle type="target" position={Position.Right} className="opacity-0"/>
+                <Handle type="source" position={Position.Left} className="opacity-0"/>
+
                 <div
                     className="w-10 rounded-tl-xl h-10 bg-black absolute z-50"
                     style={{ backgroundColor: selected ? "red" : "black" }}
                 >
                 </div>
-
-                {!isConnecting && (
-                    <Handle
-                        position={Position.Right}
-                        type="source"
-                    />
-                )}
-
-                <Handle
-                    position={Position.Left}
-                    type="target"
-                    isConnectableStart={false}
-                />
 
                 <div className="p-2 flex justify-center">
                     <strong>{id}</strong>
@@ -47,6 +37,7 @@ export default memo(({ id, selected, data }: NodeProps<MutexNodeData>) => {
                     Selected: {JSON.stringify(selected)}<br/>
                     IsTarget: {JSON.stringify(isTarget)}<br/>
                     IsConnected: {JSON.stringify(isConnecting)}<br/>
+                    Activity: {JSON.stringify(data.activity)}<br/>
                     Status: {label}
                 </div>
             </div>

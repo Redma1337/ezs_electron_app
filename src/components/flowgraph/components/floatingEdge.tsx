@@ -12,9 +12,11 @@ const FloatingEdge = memo(({ id, source, target, markerEnd, style } : EdgeProps)
 
     const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(sourceNode, targetNode);
 
-    const [edgePath] = getStraightPath({
+    const [edgePath] = getBezierPath({
         sourceX: sx,
         sourceY: sy,
+        sourcePosition: sourcePos,
+        targetPosition: targetPos,
         targetX: tx,
         targetY: ty,
     });
