@@ -12,15 +12,8 @@ class MutexHandler {
 
     // Sort Mutexes by Prio
     fillSortedMutexes(mutexes: Mutex[]) {
-        mutexes.forEach(mutex => {
-            this.sortedMutexes.push(mutex);
-        });
-        this.sortMutexes();
+        this.sortedMutexes = [...mutexes].sort((a, b) => b.getPriority() - a.getPriority());
         console.log("Mutexes nach Prio: ", this.sortedMutexes);
-    }
-
-    sortMutexes() {
-        this.sortedMutexes.sort((a, b) => b.getPriority() - a.getPriority());
     }
 
     // Sort activities by Mutex Main Prio (activities are already sorted by their own prio)
@@ -47,15 +40,12 @@ class MutexHandler {
         this.fillActivitiesMutexprio();
 
         // get valid nodes without mutex
-        let validNodesWithoutMutex = validNodes.filter(activity => activity.mutexes.length < 1);
+        let validNodesWithoutMutex = validNodes.filter(activity => activity.mutexes.length === 0);
         console.log("Valid Activities ohne Mutex: ", validNodesWithoutMutex);
 
-        // valid and has mutex
-        let validNodesWithMutex = this.activitiesMutexprio.filter(activity => activity.isValid() && activity.mutexes.length > 0);
+        // valid and has mutex and locked mutex
+        let validNodesWithMutex = this.activitiesMutexprio.filter(activity => activity.isValid() && activity.mutexes.length > 0 && activity.requestLocks());
         console.log("Valid Activities mit Mutex: ", validNodesWithMutex);
-
-        // valid and locked mutex
-        validNodesWithMutex = validNodesWithMutex.filter(activity => activity.requestLocks());
         console.log("Valid Activities mit Mutex und gelocktem Mutex: ", validNodesWithMutex);
 
         // unblock all mutexes

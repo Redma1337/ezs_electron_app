@@ -54,15 +54,15 @@ const GraphComponent = () => {
                 graph.addActivity(activity5b);
                 graph.addActivity(activity6);
 
-                graph.connect(activity1.id, activity2.id, false);
-                graph.connect(activity1.id, activity3.id, false);
-                graph.connect(activity2.id, activity4.id, false);
-                graph.connect(activity3.id, activity6.id, false);
-                graph.connect(activity4.id, activity6.id, false);
-                graph.connect(activity6.id, activity5a.id, false);
-                graph.connect(activity5a.id, activity5b.id, false);
-                graph.connect(activity5b.id, activity5a.id, true);
-                graph.connect(activity5b.id, activity1.id, true);
+                graph.connectActivities(activity1.id, activity2.id, false);
+                graph.connectActivities(activity1.id, activity3.id, false);
+                graph.connectActivities(activity2.id, activity4.id, false);
+                graph.connectActivities(activity3.id, activity6.id, false);
+                graph.connectActivities(activity4.id, activity6.id, false);
+                graph.connectActivities(activity6.id, activity5a.id, false);
+                graph.connectActivities(activity5a.id, activity5b.id, false);
+                graph.connectActivities(activity5b.id, activity5a.id, true);
+                graph.connectActivities(activity5b.id, activity1.id, true);
 
                 graph.addMutex("m23");
                 graph.addMutex("m34");
@@ -77,7 +77,7 @@ const GraphComponent = () => {
 
                 case 'connectActivities':
                     const { sourceId, targetId } = action.payload;
-                    graph.connect(sourceId, targetId, false);
+                    graph.connectActivities(sourceId, targetId, false);
                     return graph;
 
             default:

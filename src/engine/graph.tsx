@@ -2,8 +2,6 @@ import Semaphore from "./semaphore";
 import Activity from "./activity";
 import Mutex from "./mutex";
 import MutexHandler from "./mutexHandler";
-import { c } from "vite/dist/node/types.d-FdqQ54oU";
-import { get } from "http";
 
 class Graph {
     public readonly activities: Activity[];
@@ -71,7 +69,7 @@ class Graph {
     }
 
     // maybe connectActivities
-    public connect(sourceActivityId: number, targetActivityId: number, isActive: boolean) {
+    public connectActivities(sourceActivityId: number, targetActivityId: number, isActive: boolean) {
         if (sourceActivityId === targetActivityId) {
             console.error("Cannot connect an activity to itself");
             return;
