@@ -1,7 +1,8 @@
-import React, {useReducer, useState} from 'react';
+import React, { useEffect, useReducer, useState } from 'react';
 import Graph from '../engine/graph';
 import Activity from "../engine/activity";
 import ActivityComponent from "./acitvityComponent";
+import { FileHandler } from '../engine/fileHandler'; 
 
 const GraphComponent = () => {
     const [graphState, dispatchGraph] = useReducer(graphReducer, new Graph());
@@ -34,9 +35,9 @@ const GraphComponent = () => {
         const newActivity = new Activity(graphState.activities.length + 1, newActivityTask);
 
         //trigger action on our reducer
-        dispatchGraph({ 
-            type: 'addActivity', 
-            payload: { task: newActivityTask } 
+        dispatchGraph({
+            type: 'addActivity',
+            payload: { task: newActivityTask }
         });
 
         //update the state in some way to trigger a reload
@@ -46,9 +47,9 @@ const GraphComponent = () => {
     };
 
     const handleConnectActivities = () => {
-        dispatchGraph({ 
-            type: 'connectActivities', 
-            payload: { sourceId, targetId } 
+        dispatchGraph({
+            type: 'connectActivities',
+            payload: { sourceId, targetId }
         });
 
         setSourceId("")
@@ -61,6 +62,33 @@ const GraphComponent = () => {
         updatedComponents[index].position.y = deltaY;
         setActivityComponents(updatedComponents);
     };
+
+    // usefilepicker
+    const { openFilePicker, parsedData } = FileHandler();
+
+    const handleAddActivityFromFileImport = (taskName: string) => {
+        dispatchGraph({
+            type: 'addActivity',
+            payload: { task: taskName }
+        });
+        setActivityComponents(prevComponents => {
+            const newActivity = new Activity(graphState.activities.length + prevComponents.length + 1, taskName);
+            return [...prevComponents, { activity: newActivity, position: { x: 0, y: 0 } }];
+        });
+    };
+
+    const handleFileContent = () => {
+        parsedData.forEach(row => {
+            const taskName = row[0];
+            if (taskName) {
+                handleAddActivityFromFileImport(taskName);
+            }
+        });
+    };
+
+    useEffect(() => {
+        handleFileContent();
+    }, [parsedData]);
 
     return (
         <div className="bg-gray-200 w-full h-full flex">
@@ -99,6 +127,12 @@ const GraphComponent = () => {
                 >
                     Add Activity
                 </button>
+
+                <button
+                    onClick={() => openFilePicker()}
+                    className="text-white bg-blue-700 p-2 px-4 rounded shadow"
+                >Select files</button>
+                <br />
             </div>
         </div>
     );

@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\components",
+    "\\src\\engine",
+    "\\src\\pages",
+    "\\src\\renderer"
+  ],
+  "SelectedNode": "\\src\\engine\\fileHandler.ts",
+  "PreviewInSolutionExplorer": false
+}
