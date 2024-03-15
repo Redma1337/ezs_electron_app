@@ -1,7 +1,6 @@
-import React, { useReducer, useState, useEffect } from 'react';
+import React, {useReducer, useState, useEffect} from 'react';
 import Graph from '../engine/graph';
 import Activity from "../engine/activity";
-import Mutex from "../engine/mutex";
 import ActivityComponent from "./acitvityComponent";
 
 const GraphComponent = () => {
@@ -14,11 +13,12 @@ const GraphComponent = () => {
     const [targetId, setTargetId] = useState('');
 
     const [newMutexName, setNewMutexName] = useState('');
-    const [selectedActivityId, setSelectedActivityId] = useState('');
+    const [selectedActivityId, setSelectedActivityId] = useState<number>(0);
+    const [activityPriority, setActivityPriority] = useState<number>(0);
 
     useEffect(() => {
         dispatchGraph({ type: 'initializeGraph' });
-    }, []); 
+    }, []);
 
     //centralize the state management to this function to keep it all in place
     //don't use es6 function syntax, otherwise function won't be hoisted
@@ -26,25 +26,26 @@ const GraphComponent = () => {
         //TODO: add the missing action types and implement their logic
         switch (action.type) {
             case 'addActivity':
-                const newActivity = new Activity(graph.activities.length + 1, action.payload.task);
+                const newActivity = new Activity(graph.activities.length + 1, action.payload.task, action.payload.priority);
                 graph.addActivity(newActivity);
                 return graph;
 
             case 'addMutexToActivity': {
                 const { activityId, mutexName } = action.payload;
-                graph.addOrUpdateMutex(mutexName, activityId, 1);
+                graph.addMutex(mutexName);
+                graph.connectToMutex(activityId, mutexName);
                 return graph;
             }
 
             case 'initializeGraph':
-                const activity1 = new Activity(1, "Task 1");
-                const activity2 = new Activity(2, "Task 2");
-                const activity3 = new Activity(3, "Task 3");
-                const activity4 = new Activity(4, "Task 4");
-                const activity5a = new Activity(5, "Task 5a");
-                const activity5b = new Activity(6, "Task 5b");
-                const activity6 = new Activity(7, "Task 6");
-                
+                const activity1 = new Activity(1, "Task 1", 1);
+                const activity2 = new Activity(2, "Task 2", 4);
+                const activity3 = new Activity(3, "Task 3", 2);
+                const activity4 = new Activity(4, "Task 4", 8);
+                const activity5a = new Activity(5, "Task 5a", 3);
+                const activity5b = new Activity(6, "Task 5b", 5);
+                const activity6 = new Activity(7, "Task 6",6);
+
                 graph.addActivity(activity1);
                 graph.addActivity(activity2);
                 graph.addActivity(activity3);
@@ -63,18 +64,21 @@ const GraphComponent = () => {
                 graph.connect(activity5b.id, activity5a.id, true);
                 graph.connect(activity5b.id, activity1.id, true);
 
-                graph.addOrUpdateMutex("m23", 2, 4); 
-                graph.addOrUpdateMutex("m23", 3, 2); //Priority should be assigned to activity! otherwise it will be added twice - TODO
-           
-                graph.addOrUpdateMutex("m34", 3, 2); //Priority should be assigned to activity! otherwise it will be added twice - TODO
-                graph.addOrUpdateMutex("m34", 4, 8);
+                graph.addMutex("m23");
+                graph.addMutex("m34");
+
+                graph.connectToMutex(2, "m23");
+                graph.connectToMutex(3, "m23"); 
+
+                graph.connectToMutex(3, "m34");
+                graph.connectToMutex(4, "m34"); 
 
                 return graph;
 
-            case 'connectActivities':
-                const { sourceId, targetId } = action.payload;
-                graph.connect(sourceId, targetId, false);
-                return graph;
+                case 'connectActivities':
+                    const { sourceId, targetId } = action.payload;
+                    graph.connect(sourceId, targetId, false);
+                    return graph;
 
             default:
                 return graph;
@@ -82,19 +86,30 @@ const GraphComponent = () => {
     }
 
     const handleAddActivity = () => {
-        const newActivity = new Activity(graphState.activities.length + 1, newActivityTask);
+        const newActivity = new Activity(graphState.activities.length + 1, newActivityTask, activityPriority);
 
+        if (!newActivityTask || !activityPriority) {
+            alert("Please enter a task and priority.");
+            return;
+        }
+
+        if (graphState.activities.some(a => a.priority === activityPriority)) {
+            alert("Activity with the same Priority already exists");
+            return;
+        }
         //trigger action on our reducer
         dispatchGraph({
             type: 'addActivity',
-            payload: { task: newActivityTask }
+            payload: { task: newActivityTask, priority: activityPriority }
         });
 
         //update the state in some way to trigger a reload
         setNewActivityTask("");
+        setActivityPriority(0);
 
         setActivityComponents([...activityComponents, { activity: newActivity, position: { x: 0, y: 0 } }]);
     };
+
 
 
 
@@ -114,7 +129,7 @@ const GraphComponent = () => {
         });
 
         setNewMutexName("");
-        setSelectedActivityId('');
+        setSelectedActivityId(0);
     };
 
 
@@ -142,6 +157,10 @@ const GraphComponent = () => {
         graphState.walk();
         //graphState.print();
         graphState.printSemaphores();
+        graphState.seeAssignedMutexes();
+        console.log("Walk ende -----------------");
+        console.log("");
+        console.log("");
     }
 
     return (
@@ -168,6 +187,13 @@ const GraphComponent = () => {
                     placeholder="New Activity Task"
                     className="rounded p-2 px-4 w-full shadow"
                 />
+                <input
+                    type="number"
+                    value={activityPriority}
+                    onChange={e => setActivityPriority(parseInt(e.target.value))}
+                    placeholder="Activity Priority"
+                    className="rounded p-2 px-4 w-full shadow"
+                />
                 <button
                     className="text-white bg-blue-700 p-2 px-4 rounded shadow"
                     onClick={handleAddActivity}
@@ -191,7 +217,7 @@ const GraphComponent = () => {
                 <select
                     className="rounded m-2 p-2 px-4 shadow"
                     value={selectedActivityId}
-                    onChange={e => setSelectedActivityId(e.target.value)}
+                    onChange={e => setSelectedActivityId(parseInt(e.target.value))}
                 >
                     <option value="">Choose Activity</option>
                     {activityComponents.map((component, index) => (
@@ -204,7 +230,7 @@ const GraphComponent = () => {
                     className="text-white bg-blue-700 p-2 px-4 rounded shadow mt-2"
                     onClick={handleAddMutexToActivity}
                 >
-                    Add Mutex to Activity
+                    Add Activity to Mutex
                 </button>
             </div>
 

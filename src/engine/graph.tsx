@@ -3,65 +3,74 @@ import Activity from "./activity";
 import Mutex from "./mutex";
 import MutexHandler from "./mutexHandler";
 import { c } from "vite/dist/node/types.d-FdqQ54oU";
+import { get } from "http";
 
 class Graph {
     public readonly activities: Activity[];
-    public readonly mutexe: Mutex[];
+    public readonly mutexes: Mutex[];
     public mutexHandler: MutexHandler;
 
     constructor() {
         this.activities = [];
-        this.mutexe = [];
+        this.mutexes = [];
         this.mutexHandler = new MutexHandler();
     }
 
     public addActivity(activity: Activity) {
         this.activities.push(activity);
-        this.mutexHandler.fillSortInheritedMap(this.activities, this.mutexe); // once Mutex or Activity is added -> Denkfehler TODO
-        console.log("Inherited Map: ", this.mutexHandler.inheritMap);
+        console.log(`Added Activity: ${activity.task} id ${activity.id} prio ${activity.priority}`);
     }
 
-    private getActivityById(id: number) {
-        return this.activities.find(a => a.id === id);
+    private getActivityById(id: number): Activity {
+        return this.activities.find(activity => activity.id === id);;
     }
 
     private getMutexByName(mutexName: string): Mutex | undefined {
-        return this.mutexe.find(mutex => mutex.mutexName === mutexName);
+        return this.mutexes.find(mutex => mutex.mutexName === mutexName);
     }
 
-    private createMutex(id: number, mutexName: string, activityId: number, priority: number): Mutex {
+    private getPriorityById(activityId: number): number | undefined {
+        const activity = this.getActivityById(activityId);
+        return activity.getPriority();
+    }
+
+    public addMutex(mutexName: string): Mutex {
+        let mutexToUpdate = this.getMutexByName(mutexName);
+        if (mutexToUpdate) {
+            alert(`Mutex '${mutexName}' already exists.`);
+            return;
+        }
+        let id = this.mutexes.length + 1;
         const newMutex = new Mutex(id, mutexName);
-        newMutex.addActivityId(activityId, priority);
-        this.mutexe.push(newMutex);
+        this.mutexes.push(newMutex);
         return newMutex;
     }
 
-    public addOrUpdateMutex(mutexName: string, activityId: number, priority: number) {
+    public connectToMutex(activityId: number, mutexName: string) {
         let mutexToUpdate = this.getMutexByName(mutexName);
 
-        // Mutex exists
-        if (mutexToUpdate && (!mutexToUpdate.containsActivity(activityId))) {
-            mutexToUpdate.addActivityId(activityId, priority);
-            console.log(`Added Activity ID ${activityId} to existing Mutex '${mutexName}'.`);
+        // activity ID already exists
+        if (mutexToUpdate.containsActivity(activityId)) {
+            alert(`Activity ID ${activityId} already exists in Mutex '${mutexName}'.`);
             return;
         }
 
-        // Mutex exists and activity ID already exists
-        if (mutexToUpdate && mutexToUpdate.containsActivity(activityId)) {
-            console.error(`Activity ID ${activityId} already exists in Mutex '${mutexName}'.`);
-            return;
-        }
+        let activity = this.getActivityById(activityId);
+        let priority = this.getPriorityById(activityId);
 
-        // Mutex does not exist
-        if (!mutexToUpdate) {
-            let id = this.mutexe.length + 1;
-            let newMutex = this.createMutex(id, mutexName, activityId, priority);
-            newMutex.addActivityId(activityId, priority);
-            console.log(`New Mutex: '${mutexName}' - Activity ID: ${activityId}.`);
-            return;
-        }
+        mutexToUpdate.addActivity(activity);
+        activity.assignMutex(mutexToUpdate);
+
+        console.log(`Added Activity ID ${activityId} to Mutex '${mutexName}' priority ${priority}.`);
+
+        return;
     }
 
+    public deconnectFromMutex(activityId: number, mutexName: string) { //TODO
+
+    }
+
+    // maybe connectActivities
     public connect(sourceActivityId: number, targetActivityId: number, isActive: boolean) {
         if (sourceActivityId === targetActivityId) {
             console.error("Cannot connect an activity to itself");
@@ -83,57 +92,19 @@ class Graph {
         targetActivity.addInSemaphore(connection);
     }
 
-    // Only for debugging
-    seeAssignedMutexes() {
-        console.log("");
-        console.log("-- Activities --");
-        this.activities.forEach(a => {
-            const assignedMutexes = a.mutexe.map(m => m.mutexName).join(", ") || '-';
-            console.log(`Activity ${a.id}, (${a.task}): Mutexes: ${assignedMutexes}`);
-        });
-        console.log("");
-        console.log("-- Mutexes --");
-        this.mutexe.forEach(mutex => {
-            console.log(`Mutex '${mutex.mutexName}': Status - ${mutex.getStatus()}`);
-            if (mutex.activityMap.size > 0) {
-                console.log("Activities:");
-                // Iterate over the Map object directly
-                mutex.activityMap.forEach((priority, activityId) => {
-                    console.log(`- ID ${activityId} (Prio: ${priority})`);
-                });
-            } else {
-                console.log("- No activities");
-            }
-            mutex.sortActivityMap();
-            console.log("Sorted Mutex:", mutex.activityMap);
-            let firstPrio = mutex.getFirstPriority();
-            console.log("First Priority: ", firstPrio);
-        });
-    }
+    // deConnectActivities
 
 
-    handleMutexe(validNodes: Activity[]): Activity[] {
 
-
-        
-
-        this.mutexHandler.fillSortMutexMap(this.activities, this.mutexe); // once Mutex or Activity is added -> Denkfehler TODO
-        console.log("Mutex Map: ", this.mutexHandler.mutexMap);
-
-        return this.mutexHandler.handleMutex(validNodes, this.mutexe);; // = validNodes 
-    }
 
     walk() {
         // Search for nodes that have only active input semaphores
-        let validNodes = this.activities.filter(activity => activity.isValid());
+        let validNodes = this.activities.filter(activity => activity.isValid()); // bruach ich hier nicht mehr? eiegntlich 
 
         // sort and filter nodes by mutex priority 
-        validNodes = this.handleMutexe(validNodes);
+        validNodes = this.mutexHandler.handleMutexe(validNodes, this.mutexes);
 
         validNodes.forEach(activity => activity.trigger());
-        console.log("Walk ende");
-        console.log("");
-        console.log("");
     }
 
     public print() {
@@ -143,7 +114,9 @@ class Graph {
         })
     }
 
+
     printSemaphores() {
+        console.log("");
         console.log("-- Active Semaphores --");
 
         this.activities.forEach(activity => {
@@ -158,10 +131,40 @@ class Graph {
                 }
             });
         });
-        this.seeAssignedMutexes();
 
         console.log("--------------------------");
         console.log("");
+    }
+
+    // Only for debugging
+    seeAssignedMutexes() {
+        console.log("");
+        console.log("-- Activities --");
+        this.activities.forEach(a => {
+            // Assuming each activity knows its assigned mutexes directly
+            const assignedMutexes = a.mutexes.map(m => m.mutexName).join(", ") || '-';
+            console.log(`Activity ${a.id}, (${a.task}): Mutexes: ${assignedMutexes}`);
+        });
+
+        console.log("");
+        console.log("-- Mutexes --");
+        this.mutexes.forEach(mutex => {
+            console.log(`Mutex '${mutex.mutexName}': Status - ${mutex.getStatusString()}`);
+
+            if (mutex.sortedActivities.length > 0) {
+                console.log("Activities:");
+                mutex.sortedActivities.forEach(activity => {
+                    console.log(`- ID ${activity.id} (Task: ${activity.task}, Prio: ${activity.priority})`);
+                });
+            } else {
+                console.log("- No activities");
+            }
+
+            console.log("Sorted Activities:", mutex.sortedActivities.map(a => `ID ${a.id} (Prio: ${a.priority})`).join(", "));
+
+            console.log("Mutex Priority: ", mutex.getPriority());
+            console.log("");
+        });
     }
 }
 
