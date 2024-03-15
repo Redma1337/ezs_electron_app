@@ -1,8 +1,8 @@
 import React, {memo, useCallback} from 'react';
-import {useStore, getBezierPath, EdgeProps} from 'reactflow';
-import { getEdgeParams} from "../../utils/mathUtils";
+import {useStore, getBezierPath, EdgeProps, getStraightPath} from 'reactflow';
+import { getEdgeParams} from "../../../utils/mathUtils";
 
-const SimpleFloatingEdge = memo(({ id, source, target, markerEnd, style } : EdgeProps) => {
+const FloatingEdge = memo(({ id, source, target, markerEnd, style } : EdgeProps) => {
     const sourceNode = useStore(useCallback((store) => store.nodeInternals.get(source), [source]));
     const targetNode = useStore(useCallback((store) => store.nodeInternals.get(target), [target]));
 
@@ -12,11 +12,9 @@ const SimpleFloatingEdge = memo(({ id, source, target, markerEnd, style } : Edge
 
     const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(sourceNode, targetNode);
 
-    const [edgePath] = getBezierPath({
+    const [edgePath] = getStraightPath({
         sourceX: sx,
         sourceY: sy,
-        sourcePosition: sourcePos,
-        targetPosition: targetPos,
         targetX: tx,
         targetY: ty,
     });
@@ -33,4 +31,4 @@ const SimpleFloatingEdge = memo(({ id, source, target, markerEnd, style } : Edge
     );
 })
 
-export default SimpleFloatingEdge;
+export default FloatingEdge;

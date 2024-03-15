@@ -1,20 +1,21 @@
-import React, {useCallback, useReducer, useState} from 'react';
+import React, {useCallback, useReducer, useRef, useState} from 'react';
 import Graph from '../engine/graph';
 import Activity from "../engine/activity";
 import {
-    addEdge, ConnectionMode,
+    addEdge, Connection, ConnectionMode,
     Edge, EdgeTypes,
     MarkerType,
     Node,
     NodeTypes,
     OnConnect,
-    ReactFlow,
+    ReactFlow, updateEdge,
     useEdgesState,
     useNodesState
 } from "reactflow";
-import ActivityNode from "./flowgraph/acitvityNodeComponent";
-import MutexNode from "./flowgraph/mutexNodeComponent";
-import SimpleFloatingEdge from "./flowgraph/simpleFloatingEdge";
+import ActivityNode from "./flowgraph/acitvityNode";
+import MutexNode from "./flowgraph/mutexNode";
+import FloatingEdge from "./flowgraph/components/floatingEdge";
+import CustomConnectLine from "./flowgraph/components/customConnectLine";
 
 const initialNodes: Node[] = [
     { id: '1', data: { label: 'Node 1' }, position: { x: 5, y: 5 }, type: "activity"},
@@ -23,21 +24,7 @@ const initialNodes: Node[] = [
 ];
 
 const initialEdges: Edge[] = [
-    {
-        id: 'e1-2',
-        source: '1',
-        target: '2',
-        markerEnd: {
-            type: MarkerType.ArrowClosed,
-            width: 30,
-            height: 30,
-            color: "black"
-        },
-        style: {
-            stroke: "black"
-        },
-        type: "floating"
-    }
+
 ];
 
 const nodeTypes: NodeTypes = {
@@ -46,8 +33,21 @@ const nodeTypes: NodeTypes = {
 };
 
 const edgeTypes: EdgeTypes = {
-    floating: SimpleFloatingEdge,
+    floating: FloatingEdge,
 };
+
+const defaultEdgeOptions = {
+    markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 30,
+        height: 30,
+        color: "black"
+    },
+    style: {
+        stroke: "black"
+    },
+    type: "floating"
+}
 
 const GraphComponent = () => {
     const [graphState, dispatchGraph] = useReducer(graphReducer, new Graph());
@@ -55,6 +55,7 @@ const GraphComponent = () => {
 
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const edgeUpdateSuccessful = useRef(true);
 
     const onConnect: OnConnect = useCallback(
         (connection) => setEdges((eds) => addEdge(connection, eds)),
@@ -84,30 +85,22 @@ const GraphComponent = () => {
         }
     }
 
-    const handleAddActivity = () => {
-        const newActivity = new Activity(graphState.activities.length + 1, newActivityTask);
+    const onEdgeUpdateStart = useCallback(() => {
+        edgeUpdateSuccessful.current = false;
+    }, []);
 
-        //trigger action on our reducer
-        dispatchGraph({ 
-            type: 'addActivity', 
-            payload: { task: newActivityTask } 
-        });
+    const onEdgeUpdate = useCallback((oldEdge: Edge, newConnection: Connection) => {
+        edgeUpdateSuccessful.current = true;
+        setEdges((els) => updateEdge(oldEdge, newConnection, els));
+    }, []);
 
-        //update the state in some way to trigger a reload
-        setNewActivityTask("");
+    const onEdgeUpdateEnd = useCallback((_: any, edge: Edge) => {
+        if (!edgeUpdateSuccessful.current) {
+            setEdges((eds) => eds.filter((e) => e.id !== edge.id));
+        }
 
-        setActivityComponents([...activityComponents, { activity: newActivity, position: { x: 0, y: 0 } }]);
-    };
-
-    const handleConnectActivities = () => {
-        dispatchGraph({ 
-            type: 'connectActivities', 
-            payload: { sourceId, targetId } 
-        });
-
-        setSourceId("")
-        setTargetId("")
-    };
+        edgeUpdateSuccessful.current = true;
+    }, []);
 
     return (
         <div className="bg-gray-200 w-full h-full flex">
@@ -116,13 +109,18 @@ const GraphComponent = () => {
                 edges={edges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
+                onEdgeUpdate={onEdgeUpdate}
+                onEdgeUpdateStart={onEdgeUpdateStart}
+                onEdgeUpdateEnd={onEdgeUpdateEnd}
                 onConnect={onConnect}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
                 connectionMode={ConnectionMode.Loose}
                 minZoom={1}
                 maxZoom={4}
+                defaultEdgeOptions={defaultEdgeOptions}
                 attributionPosition="bottom-left"
+                connectionLineComponent={CustomConnectLine}
             >
             </ReactFlow>
         </div>

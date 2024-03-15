@@ -10,7 +10,7 @@ export default memo(({ id, selected, data }: NodeProps<MutexNodeData>) => {
         <div className="shadow bg-white min-w-40 h-fit rounded-xl">
             <Handle type="target" position={Position.Left} className="w-2 h-2"/>
             <div>
-                <div className="border p-2 flex justify-center">
+                <div className="p-2 flex justify-center">
                     <strong>{data.label}</strong>
                     <strong>{selected}</strong>
                 </div>
