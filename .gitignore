@@ -90,3 +90,10 @@ typings/
 
 # Electron-Forge
 out/
+
+.vs
+/.vs/ezs_electron_app/FileContentIndex/37d0938f-9657-40de-a005-d201418b0a13.vsidx
+/.vs/ezs_electron_app/FileContentIndex/4783e3b5-c550-4312-98c8-e85b265c9097.vsidx
+/.vs/ezs_electron_app/FileContentIndex/4b69fea0-bfd7-432e-9bb6-83e77172bb69.vsidx
+/.vs/ezs_electron_app/v17/.wsuo
+/.vs/slnx.sqlite
