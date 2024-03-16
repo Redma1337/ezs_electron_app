@@ -31,21 +31,6 @@ const GraphComponent = () => {
         }
     }
 
-    const handleAddActivity = () => {
-        const newActivity = new Activity(graphState.activities.length + 1, newActivityTask);
-
-        //trigger action on our reducer
-        dispatchGraph({
-            type: 'addActivity',
-            payload: { task: newActivityTask }
-        });
-
-        //update the state in some way to trigger a reload
-        setNewActivityTask("");
-
-        setActivityComponents([...activityComponents, { activity: newActivity, position: { x: 0, y: 0 } }]);
-    };
-
     const handleConnectActivities = () => {
         dispatchGraph({
             type: 'connectActivities',
@@ -66,22 +51,23 @@ const GraphComponent = () => {
     // usefilepicker
     const { openFilePicker, parsedData } = FileHandler();
 
-    const handleAddActivityFromFileImport = (taskName: string) => {
+    const handleAddActivity = (newActivityTask: string) => {
         dispatchGraph({
             type: 'addActivity',
-            payload: { task: taskName }
+            payload: { task: newActivityTask }
         });
         setActivityComponents(prevComponents => {
-            const newActivity = new Activity(graphState.activities.length + prevComponents.length + 1, taskName);
+            const newActivity = new Activity(graphState.activities.length + prevComponents.length + 1, newActivityTask);
             return [...prevComponents, { activity: newActivity, position: { x: 0, y: 0 } }];
         });
+        setNewActivityTask("");
     };
 
     const handleFileContent = () => {
         parsedData.forEach(row => {
             const taskName = row[0];
             if (taskName) {
-                handleAddActivityFromFileImport(taskName);
+                handleAddActivity(taskName);
             }
         });
     };
@@ -123,7 +109,7 @@ const GraphComponent = () => {
                 />
                 <button
                     className="text-white bg-blue-700 p-2 px-4 rounded shadow"
-                    onClick={handleAddActivity}
+                    onClick={() => handleAddActivity(newActivityTask)}
                 >
                     Add Activity
                 </button>

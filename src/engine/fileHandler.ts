@@ -3,7 +3,6 @@ import { useFilePicker } from 'use-file-picker';
 
 export const FileHandler = () => {
     const [parsedData, setParsedData] = useState([]);
-    const [loading, setLoading] = useState(false);
 
     const { openFilePicker } = useFilePicker({
         accept: '.csv',
@@ -23,5 +22,5 @@ export const FileHandler = () => {
         return rows.map(row => row.split(','));
     };
 
-    return { openFilePicker, parsedData, loading };
+    return { openFilePicker, parsedData };
 };
