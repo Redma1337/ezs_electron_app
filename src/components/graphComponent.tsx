@@ -88,13 +88,60 @@ const GraphComponent = () => {
         //TODO: add the missing action types and implement their logic
         switch (action.type) {
             case 'addActivity':
-                const newActivity = new Activity(graph.activities.length + 1, action.payload.task);
+                const newActivity = new Activity(graph.activities.length + 1, action.payload.task, action.payload.priority);
                 graph.addActivity(newActivity);
                 return graph;
-            case 'connectActivities':
-                const { sourceId, targetId } = action.payload;
-                graph.connect(sourceId, targetId, false);
+
+            case 'addMutexToActivity': {
+                const { activityId, mutexName } = action.payload;
+                graph.addMutex(mutexName);
+                graph.connectToMutex(activityId, mutexName);
                 return graph;
+            }
+
+            case 'initializeGraph':
+                const activity1 = new Activity(1, "Task 1", 1);
+                const activity2 = new Activity(2, "Task 2", 4);
+                const activity3 = new Activity(3, "Task 3", 2);
+                const activity4 = new Activity(4, "Task 4", 8);
+                const activity5a = new Activity(5, "Task 5a", 3);
+                const activity5b = new Activity(6, "Task 5b", 5);
+                const activity6 = new Activity(7, "Task 6",6);
+
+                graph.addActivity(activity1);
+                graph.addActivity(activity2);
+                graph.addActivity(activity3);
+                graph.addActivity(activity4);
+                graph.addActivity(activity5a);
+                graph.addActivity(activity5b);
+                graph.addActivity(activity6);
+
+                graph.connectActivities(activity1.id, activity2.id, false);
+                graph.connectActivities(activity1.id, activity3.id, false);
+                graph.connectActivities(activity2.id, activity4.id, false);
+                graph.connectActivities(activity3.id, activity6.id, false);
+                graph.connectActivities(activity4.id, activity6.id, false);
+                graph.connectActivities(activity6.id, activity5a.id, false);
+                graph.connectActivities(activity5a.id, activity5b.id, false);
+                graph.connectActivities(activity5b.id, activity5a.id, true);
+                graph.connectActivities(activity5b.id, activity1.id, true);
+
+                graph.addMutex("m23");
+                graph.addMutex("m34");
+
+                graph.connectToMutex(2, "m23");
+                graph.connectToMutex(3, "m23");
+
+                graph.connectToMutex(3, "m34");
+                graph.connectToMutex(4, "m34");
+
+                return graph;
+
+                case 'connectActivities':
+                    const { sourceId, targetId } = action.payload;
+                    graph.connectActivities(sourceId, targetId, false);
+                    return graph;
+
             default:
                 return graph;
         }
