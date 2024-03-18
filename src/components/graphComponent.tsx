@@ -136,11 +136,25 @@ const GraphComponent = () => {
         [reactFlowInstance],
     );
 
+    // Inside GraphComponent
+    const updateSelectedNodeData = useCallback((key: any, value: any) => {
+        if (!selectedNode) return;
+
+        const updatedNode = { ...selectedNode, id: value };
+        setSelectedNode(updatedNode);
+
+        // Also update the nodes state to reflect the change in the UI
+        setNodes(currentNodes =>
+            currentNodes.map(node => node.id === updatedNode.id ? updatedNode : node)
+        );
+    }, [selectedNode, setNodes]);
+
     return (
         <div className="w-full h-full flex shadow">
             <ReactFlowProvider>
                 <OptionsComponent
                     targetNode={selectedNode}
+                    onUpdateNode={updateSelectedNodeData}
                 />
                 <ReactFlow
                     nodes={nodes}

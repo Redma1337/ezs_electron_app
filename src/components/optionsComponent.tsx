@@ -1,11 +1,12 @@
 import React from 'react';
 import {Node, NodeTypes} from "reactflow";
 
-type GraphComponentProps = {
+type OptionsComponentProps = {
     targetNode: Node
+    onUpdateNode: any
 }
 
-const GraphComponent = ({ targetNode } : GraphComponentProps) => {
+const OptionsComponent = ({ targetNode, onUpdateNode } : OptionsComponentProps) => {
     const onDragStart = (event: React.DragEvent, nodeType: string) => {
         event.dataTransfer.setData('application/reactflow', nodeType);
         event.dataTransfer.effectAllowed = 'move';
@@ -16,7 +17,13 @@ const GraphComponent = ({ targetNode } : GraphComponentProps) => {
             <div className="p-5 flex flex-col gap-5">
                 <div>
                     <h2 className="font-semibold">Id</h2>
-                    <input className="px-2 p-1 rounded shadow border border-slate-200 w-full" type="text" placeholder="id" value={targetNode?.id}/>
+                    <input
+                        className="px-2 p-1 rounded shadow border border-slate-200 w-full"
+                        type="text"
+                        placeholder="id"
+                        value={targetNode?.id}
+                        onChange={e => onUpdateNode('id', e.target.value)}
+                    />
                 </div>
                 <div>
                     <h2 className="font-semibold">Task</h2>
@@ -40,4 +47,4 @@ const GraphComponent = ({ targetNode } : GraphComponentProps) => {
     );
 }
 
-export default GraphComponent
+export default OptionsComponent
