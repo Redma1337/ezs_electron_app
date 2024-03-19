@@ -6,7 +6,7 @@ import {
     Background,
     BackgroundVariant,
     ConnectionMode, Controls,
-    EdgeTypes,
+    EdgeTypes, MarkerType,
     Node,
     NodeTypes,
     ReactFlow, ReactFlowProvider,
@@ -22,6 +22,7 @@ import SplitEdgeNode from "./flowgraph/components/orNode";
 const initialNodes: Node[] = [
     { id: '1', data: { label: 'Node 1' }, position: { x: 500, y: 300 }, type: "activity"},
     { id: '2', data: { label: 'Node 2' }, position: { x: 100, y: 300 }, type: "activity"},
+    { id: '3', data: { label: 'Node 3' }, position: { x: 10, y: 10 }, type: "activity"},
 ];
 
 const nodeTypes: NodeTypes = {
@@ -38,6 +39,12 @@ const defaultEdgeOptions = {
     style: {
         stroke: "black"
     },
+    markerEnd: {
+        type: MarkerType.Arrow,
+        width: 20,
+        height: 20,
+        color: "black"
+    },
     type: "floating"
 }
 
@@ -51,11 +58,9 @@ const GraphComponent = () => {
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
 
     useEffect(() => {
-        hehehehehe('2', '4');
-        hehehehehe('1', '4');
-        hehehehehe('4', '3');
-        hehehehehe('1', '2');
         hehehehehe('2', '1');
+        hehehehehe('1', '2');
+        hehehehehe('2', '3');
     }, []);
 
     const hehehehehe = (source: string, target: string) => {
