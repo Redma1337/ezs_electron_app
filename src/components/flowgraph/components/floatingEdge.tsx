@@ -1,6 +1,6 @@
 import React, {memo, useCallback} from 'react';
-import {BaseEdge, EdgeProps, getBezierPath, Position, ReactFlowState, useStore} from 'reactflow';
-import {getEdgeParams} from "../../../utils/mathUtils";
+import {BaseEdge, EdgeProps, getStraightPath, Position, ReactFlowState, useStore} from 'reactflow';
+import {getParallelEdgeParams} from "../../../utils/mathUtils";
 
 export type GetSpecialPathParams = {
     sourceX: number;
@@ -26,49 +26,41 @@ const FloatingEdge = memo(({ id, source, target, markerEnd, style } : EdgeProps)
         return edgeExists;
     });
 
-    const getSpecialPath = (
-        { sourceX, sourceY, targetX, targetY }: GetSpecialPathParams,
-        offsetX: number,
-        offsetY: number
-    ) => {
-        const centerX = (sourceX + targetX) / 2;
-        const centerY = (sourceY + targetY) / 2;
-
-        return `M ${sourceX} ${sourceY} Q ${centerX + offsetX} ${centerY + offsetY} ${targetX} ${targetY}`;
-    };
-
-
-    const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(sourceNode, targetNode);
-
+    const { intersects, sourcePos } = getParallelEdgeParams(sourceNode, targetNode, 30);
+    const { original, parallel } = intersects;
     let path = "";
     if (isBiDirectionEdge) {
-        path = getSpecialPath({
-                        sourceX: sx,
-                        sourceY: sy,
-                        targetX: tx,
-                        targetY: ty,
-                    },
-            sourcePos == Position.Bottom ? 45 : (sourcePos == Position.Top ? -45 : 0),
-            sourcePos == Position.Left ? 45 : (sourcePos == Position.Right ? -45 : 0)
-                );
+        if (sourcePos == Position.Left) {
+            [path] = getStraightPath({
+                sourceX: parallel.sourceIntersect.x,
+                sourceY: parallel.sourceIntersect.y,
+                targetX: parallel.targetIntersect.x,
+                targetY: parallel.targetIntersect.y,
+            });
+            console.log("parallel left");
+            console.log(path);
+        } else {
+
+        }
     } else {
-        [path] = getBezierPath({
-            sourceX: sx,
-            sourceY: sy,
-            sourcePosition: sourcePos,
-            targetPosition: targetPos,
-            targetX: tx,
-            targetY: ty,
+        [path] = getStraightPath({
+            sourceX: original.sourceIntersect.x,
+            sourceY: original.sourceIntersect.y,
+            targetX: original.targetIntersect.x,
+            targetY: original.targetIntersect.y,
         });
     }
 
+
     return (
-        <BaseEdge
-            id={id}
-            path={path}
-            markerEnd={markerEnd}
-            style={style}
-        />
+        <>
+            <BaseEdge
+                id={id}
+                path={path}
+                markerEnd={markerEnd}
+                style={style}
+            />
+        </>
     );
 })
 

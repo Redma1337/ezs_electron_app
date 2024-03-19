@@ -4,20 +4,14 @@ import Activity from "../engine/activity";
 import {
     addEdge,
     Background,
-    BackgroundVariant, BezierEdge,
-    Connection,
-    ConnectionLineType,
+    BackgroundVariant,
     ConnectionMode, Controls,
-    Edge,
     EdgeTypes,
-    MarkerType, MiniMap,
     Node,
     NodeTypes,
-    OnConnect, Position,
-    ReactFlow, ReactFlowProvider, SimpleBezierEdge,
-    updateEdge,
+    ReactFlow, ReactFlowProvider,
     useEdgesState,
-    useNodesState, useUpdateNodeInternals
+    useNodesState
 } from "reactflow";
 import ActivityNode from "./flowgraph/acitvityNode";
 import MutexNode from "./flowgraph/mutexNode";
@@ -28,8 +22,6 @@ import SplitEdgeNode from "./flowgraph/components/orNode";
 const initialNodes: Node[] = [
     { id: '1', data: { label: 'Node 1' }, position: { x: 500, y: 300 }, type: "activity"},
     { id: '2', data: { label: 'Node 2' }, position: { x: 100, y: 300 }, type: "activity"},
-    { id: '3', data: { label: 'Mutex' }, position: { x: 300, y: 100 }, type: "mutex"},
-    { id: '4', data: { label: 'invisSplit' }, position: { x: 100, y: 100 }, type: "splitEdge"},
 ];
 
 const nodeTypes: NodeTypes = {
