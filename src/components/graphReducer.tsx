@@ -8,7 +8,7 @@ function graphReducer(graph: Graph, action: any) {
     //TODO: add the missing action types and implement their logic
     switch (action.type) {
         case 'addActivity':
-            const newActivity = new Activity(graph.activities.length + 1, action.payload.task, action.payload.priority);
+            const newActivity = new Activity(action.payload.id, action.payload.task, action.payload.priority);
             graph.addActivity(newActivity);
             return graph;
 

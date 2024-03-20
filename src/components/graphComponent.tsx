@@ -27,12 +27,6 @@ import { GraphContext } from './graphContext';
 import { useGraph } from './graphContext';
 import SplitEdgeNode from "./flowgraph/components/orNode";
 
-const initialNodes: Node[] = [
-    { id: '1', data: { activity: new Activity(2, "node 1", 1) }, position: { x: 500, y: 300 }, type: "activity" },
-    { id: '2', data: { activity: new Activity(1, "node 2", 2) }, position: { x: 100, y: 300 }, type: "activity" },
-    { id: '3', data: { mutex: new Mutex(0, "mutex 0") }, position: { x: 300, y: 100 }, type: "mutex" },
-];
-
 const nodeTypes: NodeTypes = {
     activity: ActivityNode,
     mutex: MutexNode,
@@ -60,18 +54,18 @@ const GraphComponent = () => {
     const [activityComponents, setActivityComponents] = useState([]);
 
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [selectedNode, setSelectedNode] = useState<Node>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const { state, dispatch } = useGraph();
 
     useEffect(() => {
-        hehehehehe('2', '1');
-        hehehehehe('1', '2');
-        hehehehehe('2', '3');
+        newEdge('2', '1');
+        newEdge('1', '2');
+        newEdge('2', '3');
     }, []);
-
-    const hehehehehe = (source: string, target: string) => {
+    
+    const newEdge = (source: string, target: string) => {
         setEdges((eds) =>
             nodes
                 .filter((node) => node.id === source || node.selected)
@@ -112,14 +106,27 @@ const GraphComponent = () => {
                 x: event.clientX,
                 y: event.clientY,
             });
-            const newNode = {
-                id: Math.floor(Math.random() * 10000).toString(),
-                type,
-                position,
-                data: { activity: new Activity(3, "empty Node", 0) , label: `${type} node` },
-            };
+            const nodeId = Math.floor(Math.random() * 10000);
+            var newNode: any;
+            if (type === 'activity') {
+                newNode = {
+                    id: nodeId.toString(),
+                    type,
+                    position,
+                    data: { activity: new Activity(nodeId, "empty Node", 0), label: `${type} node` },
+                };
+            } else if (type === 'mutex') {
+                newNode = {
+                    id: nodeId.toString(),
+                    type,
+                    position,
+                    data: { mutex: new Mutex(nodeId, "empty mutex"), label: `${type} node` },
+                };
+            }
+            
 
             setNodes((nds) => nds.concat(newNode));
+            dispatch({ type: 'addActivity', payload: { id: nodeId, task: "emptyNode", priority: 0 } })
         },
         [reactFlowInstance],
     );
@@ -149,16 +156,12 @@ const GraphComponent = () => {
         );
     }, [selectedNode, setSelectedNode, setNodes]);
 
-    const addEdgeToGraph = (connection: { source: string; target: string; id?: string; }) => {
-        setEdges((eds) => addEdge({ id: connection.id ?? `e${connection.source}-${connection.target}`, source: connection.source, target: connection.target }, eds));
-    };
-
     return (
         <div className="w-full h-full flex shadow">
             <ReactFlowProvider>
-                <GraphContext.Provider value={{ state, dispatch, addEdge: addEdgeToGraph }}>
+                <GraphContext.Provider value={{ state, dispatch, edges, setEdges }}>
                     <OptionsComponent
-                        activity={selectedNode?.data.activity}
+                        selectedNode={selectedNode}
                         nodes={nodes}
                         onUpdateNode={updateSelectedNodeData}
                     />

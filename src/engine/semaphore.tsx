@@ -1,10 +1,12 @@
 class Semaphore {
     private active_state: boolean;
     public readonly name: string;
+    public readonly id: string;
 
-    constructor(isActive: boolean, name: string) {
+    constructor(isActive: boolean, name: string, id: string) {
         this.active_state = isActive;
         this.name = name;
+        this.id = id;
     }
 
     public isActive() {

@@ -84,10 +84,11 @@ class Graph {
         }
 
         //this shares a reference of the semaphore to both activities which makes controlling bot easy
-        const connection = new Semaphore(isActive, targetActivity.task)
+        const connection = new Semaphore(isActive, targetActivity.task, 's' + sourceActivity.id + '-' + targetActivity.id)
 
         sourceActivity.addOutSemaphore(connection);
         targetActivity.addInSemaphore(connection);
+        console.log(`Added connection between activity with id: ${sourceActivityId} and ${targetActivityId}.`);
     }
 
     // deConnectActivities

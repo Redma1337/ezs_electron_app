@@ -3,13 +3,15 @@
 import React, { createContext, useContext, Dispatch, ReactNode } from 'react';
 import Graph from "../engine/graph";
 import graphReducer from './graphReducer';
+import { Edge } from 'reactflow';
 
 
 // Define the type of the context
 interface GraphContextType {
     state: Graph;
     dispatch: Dispatch<any>;
-    addEdge?: (connection: { source: string; target: string; id?: string; }) => void;
+    edges?: Edge[]; 
+    setEdges?: React.Dispatch<React.SetStateAction<Edge[]>>;
 }
 
 // Create the context with an undefined default value
