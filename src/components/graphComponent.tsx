@@ -5,19 +5,13 @@ import {
     addEdge,
     Background,
     BackgroundVariant,
-    Connection,
-    ConnectionLineType,
     ConnectionMode, Controls,
-    Edge,
-    EdgeTypes,
-    MarkerType, MiniMap,
+    EdgeTypes, MarkerType,
     Node,
     NodeTypes,
-    OnConnect, Position,
     ReactFlow, ReactFlowProvider,
-    updateEdge,
     useEdgesState,
-    useNodesState, useUpdateNodeInternals
+    useNodesState
 } from "reactflow";
 import ActivityNode from "./flowgraph/acitvityNode";
 import MutexNode from "./flowgraph/mutexNode";
@@ -31,6 +25,7 @@ import acitvityNode from "./flowgraph/acitvityNode";
 import activity from "../engine/activity";
 import { GraphContext } from './graphContext';
 import { useGraph } from './graphContext';
+import SplitEdgeNode from "./flowgraph/components/orNode";
 
 const initialNodes: Node[] = [
     { id: '1', data: { activity: new Activity(2, "node 1", 1) }, position: { x: 500, y: 300 }, type: "activity" },
@@ -41,6 +36,7 @@ const initialNodes: Node[] = [
 const nodeTypes: NodeTypes = {
     activity: ActivityNode,
     mutex: MutexNode,
+    splitEdge: SplitEdgeNode,
 };
 
 const edgeTypes: EdgeTypes = {
@@ -48,14 +44,14 @@ const edgeTypes: EdgeTypes = {
 };
 
 const defaultEdgeOptions = {
-    markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 30,
-        height: 30,
-        color: "black"
-    },
     style: {
         stroke: "black"
+    },
+    markerEnd: {
+        type: MarkerType.Arrow,
+        width: 20,
+        height: 20,
+        color: "black"
     },
     type: "floating"
 }
@@ -70,13 +66,22 @@ const GraphComponent = () => {
     const { state, dispatch } = useGraph();
 
     useEffect(() => {
-        let connection = {
-            id: 'e1-2',
-            source: '1',
-            target: '2'
-        };
-        setEdges((eds) => addEdge(connection, eds));
-    }, [])
+        hehehehehe('2', '1');
+        hehehehehe('1', '2');
+        hehehehehe('2', '3');
+    }, []);
+
+    const hehehehehe = (source: string, target: string) => {
+        setEdges((eds) =>
+            nodes
+                .filter((node) => node.id === source || node.selected)
+                .reduce(
+                    // @ts-ignore
+                    (eds, node) => addEdge({ source: node.id, target }, eds),
+                    eds,
+                ),
+        );
+    }
 
     //TODO: handle the input fields in a separate component
     const [newActivityTask, setNewActivityTask] = useState('');

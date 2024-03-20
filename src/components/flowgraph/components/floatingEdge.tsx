@@ -1,8 +1,8 @@
 import React, {memo, useCallback} from 'react';
-import {useStore, getBezierPath, EdgeProps, getStraightPath} from 'reactflow';
-import { getEdgeParams} from "../../../utils/mathUtils";
+import {BaseEdge, EdgeProps, ReactFlowState, useStore} from 'reactflow';
+import {getBetterFloatingStraightPath} from "../../../utils/mathUtils";
 
-const FloatingEdge = memo(({ id, source, target, markerEnd, style } : EdgeProps) => {
+const FloatingEdge = memo(({id, source, target, markerEnd, style }: EdgeProps) => {
     const sourceNode = useStore(useCallback((store) => store.nodeInternals.get(source), [source]));
     const targetNode = useStore(useCallback((store) => store.nodeInternals.get(target), [target]));
 
@@ -10,26 +10,34 @@ const FloatingEdge = memo(({ id, source, target, markerEnd, style } : EdgeProps)
         return null;
     }
 
-    const { sx, sy, tx, ty, sourcePos, targetPos } = getEdgeParams(sourceNode, targetNode);
-
-    const [edgePath] = getBezierPath({
-        sourceX: sx,
-        sourceY: sy,
-        sourcePosition: sourcePos,
-        targetPosition: targetPos,
-        targetX: tx,
-        targetY: ty,
+    const isBiDirectionEdge = useStore((s: ReactFlowState) => {
+        return s.edges.some(
+            (e) =>
+                (e.source === target && e.target === source) || (e.target === source && e.source === target)
+        );
     });
 
+    const { path, parallelPath } = getBetterFloatingStraightPath(targetNode, sourceNode, true, 20);
+
     return (
-        <path
-            id={id}
-            className="react-flow__edge-path"
-            d={edgePath}
-            strokeWidth={5}
-            markerEnd={markerEnd}
-            style={style}
-        />
+        <>
+            {
+                isBiDirectionEdge && sourceNode.id < targetNode.id ?
+                    <BaseEdge
+                        id={id}
+                        path={path}
+                        markerEnd={markerEnd}
+                        style={style}
+                    />
+                :
+                    <BaseEdge
+                        id={id}
+                        path={parallelPath}
+                        markerEnd={markerEnd}
+                        style={style}
+                    />
+            }
+        </>
     );
 })
 

@@ -1,4 +1,4 @@
-import React, {memo, useState} from 'react';
+import React, { memo } from 'react';
 import Activity from "src/engine/activity";
 import {NodeProps, Handle, Position, useStore, ReactFlowState} from "reactflow";
 
@@ -13,11 +13,9 @@ export default memo(({ id, selected, data }: NodeProps<MutexNodeData>) => {
 
     const isConnecting = !!connectionNodeId;
     const isTarget = connectionNodeId && connectionNodeId !== id;
-    const label = isTarget ? 'Drop here' : 'Drag to connect';
 
-    //
     return (
-        <div className="shadow border border-slate-200 bg-white min-w-60 h-fit rounded-xl">
+        <div className="shadow border border-slate-200 bg-white min-w-60 h-fit rounded-xl opacity-70">
             <div>
                 <Handle type="target" position={Position.Right} className="opacity-0"/>
                 <Handle type="source" position={Position.Left} className="opacity-0"/>
@@ -36,8 +34,6 @@ export default memo(({ id, selected, data }: NodeProps<MutexNodeData>) => {
                     Selected: {JSON.stringify(selected)}<br/>
                     IsTarget: {JSON.stringify(isTarget)}<br/>
                     IsConnected: {JSON.stringify(isConnecting)}<br/>
-                    Activity: {JSON.stringify(data.activity)}<br/>
-                    Status: {label}
                 </div>
             </div>
         </div>
