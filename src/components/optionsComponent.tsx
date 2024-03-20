@@ -46,6 +46,16 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
         }
     };
 
+    const deleteSemaphore = (semaphoreId: string) => {
+        const semaphore = selectedNode.data.activity.outSemaphores.find((semaphore: { id: string }) => semaphore.id === semaphoreId);
+        const targetActivity = semaphore.targetActivity;
+        const targetNode = nodes.find(node => node.data.activity === targetActivity);
+        const updatedSemaphores = selectedNode.data.activity.outSemaphores.filter((semaphore: { id: string }) => semaphore.id !== semaphoreId);
+
+        selectedNode.data.activity.outSemaphores = updatedSemaphores;
+        removeEdge(selectedNode.id, targetNode.id);
+    };
+
     const newEdge = (source: string, target: string) => {
         setEdges((eds) =>
             nodes
@@ -57,6 +67,12 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                 ),
         );
     }
+
+    const removeEdge = (source: string, target: string) => {
+        setEdges((currentEdges) =>
+            currentEdges.filter((edge) => !(edge.source === source && edge.target === target))
+        );
+    };
 
     return (
         <div className="w-[300px] flex flex-col justify-between">
@@ -117,7 +133,7 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                             ))}
                                     </select>
                                     <button
-                                        className={`px-4 py-2 rounded-lg ${selectedOutSemaphore ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-blue-200 text-gray-500 cursor-not-allowed'}`}
+                                        className={`px-4 py-2 rounded-lg ${selectedOutSemaphore ? 'bg-blue-500 hover:bg-blue-700 text-white' : 'bg-blue-200 text-gray-500 cursor-not-allowed'}`}
                                         onClick={() => addSemaphore(selectedOutSemaphore)}
                                         disabled={!selectedOutSemaphore}
                                     >
@@ -126,11 +142,17 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                 </div>
                                 {selectedNode.data.activity.outSemaphores.map(function (semaphore: Semaphore, index: number) {
                                     return (
-                                        <div key={index} className="px-2 p-1 m-1 rounded shadow border border-slate-200 w-full">
-                                            {semaphore.targetActivity.id}
+                                        <div key={semaphore.id} className="flex items-center justify-between space-x-2 p-1 m-1 rounded shadow border border-slate-200 w-full">
+                                            <span>{semaphore.targetActivity.id}</span>
+                                            <button
+                                                onClick={() => deleteSemaphore(semaphore.id)}
+                                                className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+                                                Delete
+                                            </button>
                                         </div>
                                     );
                                 })}
+
 
                             </div>
                         </div>
