@@ -1,8 +1,9 @@
 import React, {memo, useState} from 'react';
 import { NodeProps, Handle, Position } from "reactflow";
+import Mutex from "../../engine/mutex";
 
 type MutexNodeData = {
-    label: string,
+    mutex: Mutex,
 }
 
 export default memo(({ id, selected, data }: NodeProps<MutexNodeData>) => {
@@ -11,7 +12,7 @@ export default memo(({ id, selected, data }: NodeProps<MutexNodeData>) => {
             <Handle type="target" position={Position.Left} className="w-2 h-2"/>
             <div>
                 <div className="p-2 flex justify-center">
-                    <strong>{data.label}</strong>
+                    <strong>{data.mutex.mutexName}</strong>
                     <strong>{selected}</strong>
                 </div>
             </div>
