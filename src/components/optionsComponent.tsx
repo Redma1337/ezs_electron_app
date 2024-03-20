@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useContext, useState } from 'react';
 import {Node, NodeTypes} from "reactflow";
 import Activity from "../engine/activity";
-import { useGraph } from './graphContext';
+import { GraphContext } from './graphContext';
 
 type OptionsComponentProps = {
     activity: Activity
@@ -10,7 +10,9 @@ type OptionsComponentProps = {
 }
 
 const OptionsComponent = ({ activity, nodes, onUpdateNode } : OptionsComponentProps) => {
-    const { state, dispatch } = useGraph();
+
+    const { state, dispatch, addEdge } = useContext(GraphContext);
+    const [selectedOutSemaphore, setSelectedOutSemaphore] = useState('');
 
     const onDragStart = (event: React.DragEvent, nodeType: string) => {
         event.dataTransfer.setData('application/reactflow', nodeType);
@@ -18,7 +20,8 @@ const OptionsComponent = ({ activity, nodes, onUpdateNode } : OptionsComponentPr
     };
 
     const updateSemaphore = (targetId: string) : void => {
-      dispatch({type: 'connectActivities', payload: {sourceId: activity.id, targetId: targetId}})
+        dispatch({ type: 'connectActivities', payload: { sourceId: activity.id, targetId: targetId } })
+        addEdge({ source: activity.id.toString(), target: targetId });
     };
 
     return (
@@ -51,19 +54,23 @@ const OptionsComponent = ({ activity, nodes, onUpdateNode } : OptionsComponentPr
                             </div>
                             <div>
                                 <h2 className="font-semibold">Semaphores</h2>
-                                <div>
-                                    <label htmlFor="nodeSelector"
-                                           className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select
-                                        a node</label>
+                                <div className="flex items-center">
                                     <select
                                         id="nodeSelector"
-                                        className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                                        onChange={(e) => updateSemaphore(e.target.value)}
+                                        className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mr-2"
+                                        onChange={(e) => setSelectedOutSemaphore(e.target.value)}
+                                        value={selectedOutSemaphore}
                                     >
                                         {nodes.filter(node => node.data.activity).map((node) => (
                                             <option key={node.id} value={node.id}>{node.data.activity.task}</option>
                                         ))}
                                     </select>
+                                    <button
+                                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                                        onClick={() => updateSemaphore(selectedOutSemaphore)}
+                                    >
+                                        Add
+                                    </button>
                                 </div>
                                 {activity.outSemaphores.map(function (semaphore) {
                                     return (

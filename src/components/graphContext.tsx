@@ -2,20 +2,21 @@
 
 import React, { createContext, useContext, Dispatch, ReactNode } from 'react';
 import Graph from "../engine/graph";
-import graphReducer from './graphReducer'; // Make sure this import is correct
+import graphReducer from './graphReducer';
 
 
 // Define the type of the context
 interface GraphContextType {
     state: Graph;
-    dispatch: Dispatch<any>; // Consider using a more specific action type
+    dispatch: Dispatch<any>;
+    addEdge?: (connection: { source: string; target: string; id?: string; }) => void;
 }
 
 // Create the context with an undefined default value
-const GraphContext = createContext<GraphContextType | undefined>(undefined);
+export const GraphContext = createContext<GraphContextType | undefined>(undefined);
 
 interface GraphProviderProps {
-    children: ReactNode; // Define the children prop explicitly
+    children: ReactNode; 
 }
 
 // Define a provider component with the corrected type

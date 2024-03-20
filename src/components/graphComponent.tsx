@@ -1,4 +1,4 @@
-import React, {DragEvent, DragEventHandler, useCallback, useEffect, useReducer, useRef, useState} from 'react';
+import React, { DragEvent, DragEventHandler, useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import Graph from '../engine/graph';
 import Activity from "../engine/activity";
 import {
@@ -23,17 +23,19 @@ import ActivityNode from "./flowgraph/acitvityNode";
 import MutexNode from "./flowgraph/mutexNode";
 import FloatingEdge from "./flowgraph/components/floatingEdge";
 import OptionsComponent from "./optionsComponent";
-import {PanelPosition} from "@reactflow/core/dist/esm/types/general";
+import { PanelPosition } from "@reactflow/core/dist/esm/types/general";
 import Mutex from "../engine/mutex";
-import {Simulate} from "react-dom/test-utils";
+import { Simulate } from "react-dom/test-utils";
 import select = Simulate.select;
 import acitvityNode from "./flowgraph/acitvityNode";
 import activity from "../engine/activity";
+import { GraphContext } from './graphContext';
+import { useGraph } from './graphContext';
 
 const initialNodes: Node[] = [
-    { id: '1', data: { activity: new Activity(2, "node 1", 1) }, position: { x: 500, y: 300 }, type: "activity"},
-    { id: '2', data: { activity: new Activity(1, "node 2", 2) }, position: { x: 100, y: 300 }, type: "activity"},
-    { id: '3', data: { mutex: new Mutex(0, "mutex 0") }, position: { x: 300, y: 100 }, type: "mutex"},
+    { id: '1', data: { activity: new Activity(2, "node 1", 1) }, position: { x: 500, y: 300 }, type: "activity" },
+    { id: '2', data: { activity: new Activity(1, "node 2", 2) }, position: { x: 100, y: 300 }, type: "activity" },
+    { id: '3', data: { mutex: new Mutex(0, "mutex 0") }, position: { x: 300, y: 100 }, type: "mutex" },
 ];
 
 const nodeTypes: NodeTypes = {
@@ -65,6 +67,7 @@ const GraphComponent = () => {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
     const [selectedNode, setSelectedNode] = useState<Node>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
+    const { state, dispatch } = useGraph();
 
     useEffect(() => {
         let connection = {
@@ -73,20 +76,12 @@ const GraphComponent = () => {
             target: '2'
         };
         setEdges((eds) => addEdge(connection, eds));
-        connection = {
-            id: 'e2-1',
-            source: '2',
-            target: '1'
-        };
-        setEdges((eds) => addEdge(connection, eds));
     }, [])
 
     //TODO: handle the input fields in a separate component
     const [newActivityTask, setNewActivityTask] = useState('');
     const [sourceId, setSourceId] = useState('');
     const [targetId, setTargetId] = useState('');
-
-
 
     const onNodeDragStart = useCallback((event: React.MouseEvent, node: Node, nodes: Node[]) => {
         if (!selectedNode || selectedNode.id !== node.id) {
@@ -116,7 +111,7 @@ const GraphComponent = () => {
                 id: Math.floor(Math.random() * 10000).toString(),
                 type,
                 position,
-                data: { label: `${type} node` },
+                data: { activity: new Activity(3, "empty Node", 0) , label: `${type} node` },
             };
 
             setNodes((nds) => nds.concat(newNode));
@@ -149,34 +144,39 @@ const GraphComponent = () => {
         );
     }, [selectedNode, setSelectedNode, setNodes]);
 
+    const addEdgeToGraph = (connection: { source: string; target: string; id?: string; }) => {
+        setEdges((eds) => addEdge({ id: connection.id ?? `e${connection.source}-${connection.target}`, source: connection.source, target: connection.target }, eds));
+    };
 
     return (
         <div className="w-full h-full flex shadow">
             <ReactFlowProvider>
-                <OptionsComponent
-                    activity={selectedNode?.data.activity}
-                    nodes={nodes}
-                    onUpdateNode={updateSelectedNodeData}
-                />
-                <ReactFlow
-                    nodes={nodes}
-                    edges={edges}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    onDrop={onDrop}
-                    onDragOver={onDragOver}
-                    onInit={setReactFlowInstance}
-                    onNodeDragStart={onNodeDragStart}
-                    nodeTypes={nodeTypes}
-                    edgeTypes={edgeTypes}
-                    connectionMode={ConnectionMode.Loose}
-                    defaultEdgeOptions={defaultEdgeOptions}
-                    attributionPosition="bottom-left"
-                    className="border-l border-l-slate-300 shadow"
-                >
-                    <Background variant={BackgroundVariant.Lines}/>
-                    <Controls position={"bottom-right"}/>
-                </ReactFlow>
+                <GraphContext.Provider value={{ state, dispatch, addEdge: addEdgeToGraph }}>
+                    <OptionsComponent
+                        activity={selectedNode?.data.activity}
+                        nodes={nodes}
+                        onUpdateNode={updateSelectedNodeData}
+                    />
+                    <ReactFlow
+                        nodes={nodes}
+                        edges={edges}
+                        onNodesChange={onNodesChange}
+                        onEdgesChange={onEdgesChange}
+                        onDrop={onDrop}
+                        onDragOver={onDragOver}
+                        onInit={setReactFlowInstance}
+                        onNodeDragStart={onNodeDragStart}
+                        nodeTypes={nodeTypes}
+                        edgeTypes={edgeTypes}
+                        connectionMode={ConnectionMode.Loose}
+                        defaultEdgeOptions={defaultEdgeOptions}
+                        attributionPosition="bottom-left"
+                        className="border-l border-l-slate-300 shadow"
+                    >
+                        <Background variant={BackgroundVariant.Lines} />
+                        <Controls position={"bottom-right"} />
+                    </ReactFlow>
+                </GraphContext.Provider>
             </ReactFlowProvider>
         </div>
     );
