@@ -51,36 +51,11 @@ const defaultEdgeOptions = {
 }
 
 const GraphComponent = () => {
-    const [activityComponents, setActivityComponents] = useState([]);
-
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [selectedNode, setSelectedNode] = useState<Node>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const { state, dispatch } = useGraph();
-
-    useEffect(() => {
-        newEdge('2', '1');
-        newEdge('1', '2');
-        newEdge('2', '3');
-    }, []);
-    
-    const newEdge = (source: string, target: string) => {
-        setEdges((eds) =>
-            nodes
-                .filter((node) => node.id === source || node.selected)
-                .reduce(
-                    // @ts-ignore
-                    (eds, node) => addEdge({ source: node.id, target }, eds),
-                    eds,
-                ),
-        );
-    }
-
-    //TODO: handle the input fields in a separate component
-    const [newActivityTask, setNewActivityTask] = useState('');
-    const [sourceId, setSourceId] = useState('');
-    const [targetId, setTargetId] = useState('');
 
     const onNodeDragStart = useCallback((event: React.MouseEvent, node: Node, nodes: Node[]) => {
         if (!selectedNode || selectedNode.id !== node.id) {

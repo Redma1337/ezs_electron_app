@@ -1,12 +1,14 @@
+import Activity from "./activity";
+
 class Semaphore {
     private active_state: boolean;
-    public readonly name: string;
+    public readonly targetActivity: Activity;
     public readonly id: string;
 
-    constructor(isActive: boolean, name: string, id: string) {
+    constructor(isActive: boolean, id: string, targetActivity: Activity) {
         this.active_state = isActive;
-        this.name = name;
         this.id = id;
+        this.targetActivity = targetActivity;
     }
 
     public isActive() {

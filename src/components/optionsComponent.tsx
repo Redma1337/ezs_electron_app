@@ -37,7 +37,7 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
         const semaphoreExists = selectedNode.data.activity.outSemaphores.some((semaphore: { id: string }) => semaphore.id === semaphoreId);
 
         if (targetNode && !semaphoreExists) {
-            const connection = new Semaphore(false, targetNode.data.activity.task, semaphoreId);
+            const connection = new Semaphore(false, semaphoreId, targetNode.data.activity);
             selectedNode.data.activity.outSemaphores.push(connection);
             dispatch({ type: 'connectActivities', payload: { sourceId: selectedNode.data.activity.id, targetId: targetNode.data.activity.id } });
             newEdge(selectedNode.id, targetId);
@@ -62,7 +62,7 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
         <div className="w-[300px] flex flex-col justify-between">
             {
                 !selectedNode?.data.activity ?
-                    <div className="h-full flex flex-col justify-between"> {/* Adjusted this line */}
+                    <div className="h-full flex flex-col justify-between">
                         <div>
                         </div>
                         <div className="flex flex-col p-5 gap-5 border-t border-slate-200">
@@ -113,13 +113,13 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                         {nodes
                                             .filter(node => node.data.activity && node.id !== selectedNode?.id)
                                             .map((node) => (
-                                                <option key={node.id} value={node.id}>{node.data.activity.task}</option>
+                                                <option key={node.id} value={node.id}>{node.data.activity.id}</option>
                                             ))}
                                     </select>
                                     <button
                                         className={`px-4 py-2 rounded-lg ${selectedOutSemaphore ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-blue-200 text-gray-500 cursor-not-allowed'}`}
                                         onClick={() => addSemaphore(selectedOutSemaphore)}
-                                        disabled={!selectedOutSemaphore} // This disables the button when selectedOutSemaphore is an empty string
+                                        disabled={!selectedOutSemaphore}
                                     >
                                         Add
                                     </button>
@@ -127,7 +127,7 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                 {selectedNode.data.activity.outSemaphores.map(function (semaphore: Semaphore, index: number) {
                                     return (
                                         <div key={index} className="px-2 p-1 m-1 rounded shadow border border-slate-200 w-full">
-                                            {semaphore.name}
+                                            {semaphore.targetActivity.id}
                                         </div>
                                     );
                                 })}
