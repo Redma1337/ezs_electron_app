@@ -15,6 +15,11 @@ function graphReducer(graph: Graph, action: any) {
             graph.addActivity(newActivity);
             return graph;
 
+        case 'removeActivity':
+            const activityToRemove = action.payload.activityToRemove;
+            graph.removeActivity(activityToRemove);
+            return graph;
+
         case 'addMutexToActivity': {
             const { activityId, mutexName } = action.payload;
             graph.addMutex(mutexName);

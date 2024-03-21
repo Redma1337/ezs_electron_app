@@ -19,6 +19,16 @@ class Graph {
         console.log(`Added Activity: ${activity.task} id ${activity.id} prio ${activity.priority}`);
     }
 
+    public removeActivity(activityToRemove: Activity) {
+        const index = this.activities.findIndex(activity => activity.id === activityToRemove.id);
+        if (index > -1) {
+            this.activities.splice(index, 1);
+            console.log(`Removed Activity: ${activityToRemove.task} id ${activityToRemove.id} prio ${activityToRemove.priority}`);
+        } else {
+            console.log(`Activity not found: id ${activityToRemove.id}`);
+        }
+    }
+
     private getActivityById(id: number): Activity {
         return this.activities.find(activity => activity.id === id);;
     }
@@ -131,8 +141,7 @@ class Graph {
             console.log();
         })
     }
-
-
+    
     printSemaphores() {
         console.log("");
         console.log("-- Active Semaphores --");

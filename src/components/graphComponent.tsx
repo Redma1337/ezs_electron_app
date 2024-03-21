@@ -55,8 +55,29 @@ const GraphComponent = () => {
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [selectedNode, setSelectedNode] = useState<Node>(null);
+    const [nodeToDelete, setNodeToDelete] = useState<Node>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const { state, dispatch } = useGraph();
+
+    const handleNodesChange = useCallback((changes: any) => {
+        changes.forEach((change: any) => {
+            if (change.type === 'remove') {
+                const nodeToRemove = nodes.find(node => node.id === change.id);
+                if (nodeToRemove && nodeToRemove.data.activity) {
+                    const activityToRemove = nodeToRemove.data.activity;
+
+                    console.log(`Removing activity with id: ${activityToRemove.id}`);
+                    dispatch({
+                        type: 'removeActivity',
+                        payload: { activityToRemove }
+                    });
+                }
+            }
+        });
+
+        // Call the original nodes change handler to ensure React Flow's state is updated
+        onNodesChange(changes);
+    }, [nodes, dispatch, onNodesChange]);
 
     const onNodeDragStart = useCallback((event: React.MouseEvent, node: Node, nodes: Node[]) => {
         if (!selectedNode || selectedNode.id !== node.id) {
@@ -131,8 +152,6 @@ const GraphComponent = () => {
         );
     }, [selectedNode, setSelectedNode, setNodes]);
 
-    
-
     return (
         <div className="w-full h-full flex shadow">
             <ReactFlowProvider>
@@ -146,7 +165,7 @@ const GraphComponent = () => {
                     <ReactFlow
                         nodes={nodes}
                         edges={edges}
-                        onNodesChange={onNodesChange}
+                        onNodesChange={handleNodesChange}
                         onEdgesChange={onEdgesChange}
                         onDrop={onDrop}
                         onDragOver={onDragOver}

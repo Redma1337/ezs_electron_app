@@ -12,10 +12,11 @@ interface GraphContextType {
     dispatch: Dispatch<any>;
     edges?: Edge[]; 
     setEdges?: React.Dispatch<React.SetStateAction<Edge[]>>;
+    nodeToDelete?: Node
 }
 
-// Create the context with an undefined default value
-export const GraphContext = createContext<GraphContextType | undefined>(undefined);
+// Create the context with an null default value
+export const GraphContext = createContext<GraphContextType | null>(null);
 
 interface GraphProviderProps {
     children: ReactNode; 
@@ -35,7 +36,7 @@ export const GraphProvider: React.FC<GraphProviderProps> = ({ children }) => {
 // Hook to use the graph context
 export const useGraph = (): GraphContextType => {
     const context = useContext(GraphContext);
-    if (context === undefined) {
+    if (!context) {
         throw new Error('useGraph must be used within a GraphProvider');
     }
     return context;

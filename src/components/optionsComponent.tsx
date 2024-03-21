@@ -1,10 +1,11 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Node, NodeTypes, addEdge, useEdges } from "reactflow";
+import React, { useContext, useEffect, useState, useCallback } from 'react';
+import { Node, NodeTypes, addEdge, useEdges, OnNodesChange } from "reactflow";
 import Activity from "../engine/activity";
 import { GraphContext } from './graphContext';
 import Semaphore from '../engine/semaphore';
 import { connect } from 'net';
 import { FileHandler } from '../engine/fileHandler';
+import { useGraph } from './graphContext';
 
 type OptionsComponentProps = {
     selectedNode: Node
@@ -15,9 +16,11 @@ type OptionsComponentProps = {
 
 const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: OptionsComponentProps) => {
 
-    const { state, dispatch } = useContext(GraphContext);
-    const { setEdges } = useContext(GraphContext);
+    const { state, dispatch } = useGraph();
+    const { setEdges } = useGraph();
     const [selectedOutSemaphore, setSelectedOutSemaphore] = useState('');
+
+    
 
     useEffect(() => {
         setSelectedOutSemaphore('')
