@@ -80,13 +80,15 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
     };
 
     const deleteSemaphore = (semaphoreId: string) => {
-        const semaphore = selectedNode.data.activity.outSemaphores.find((semaphore: { id: string }) => semaphore.id === semaphoreId);
-        const targetActivity = semaphore.targetActivity;
+        const semaphoreToRemove = selectedNode.data.activity.outSemaphores.find((semaphore: { id: string }) => semaphore.id === semaphoreId);
+        const targetActivity = semaphoreToRemove.targetActivity;
         const targetNode = nodes.find(node => node.data.activity === targetActivity);
         const updatedSemaphores = selectedNode.data.activity.outSemaphores.filter((semaphore: { id: string }) => semaphore.id !== semaphoreId);
 
         selectedNode.data.activity.outSemaphores = updatedSemaphores;
         removeEdge(selectedNode.id, targetNode.id);
+        dispatch({ type: 'disconnectActivities', payload: { sourceId: selectedNode.data.activity.id, targetId: targetNode.data.activity.id, semaphoreToRemove: semaphoreToRemove }});
+
     };
 
     const newEdge = (source: string, target: string) => {

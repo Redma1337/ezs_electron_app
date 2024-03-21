@@ -1,10 +1,13 @@
 import Graph from "../engine/graph";
 import Activity from "../engine/activity";
+import Semaphore from "../engine/semaphore";
+import { act } from "react-dom/test-utils";
 
 
 //centralize the state management to this function to keep it all in place
 //don't use es6 function syntax, otherwise function won't be hoisted
 function graphReducer(graph: Graph, action: any) {
+    var sourceId, targetId;
     //TODO: add the missing action types and implement their logic
     switch (action.type) {
         case 'addActivity':
@@ -58,8 +61,16 @@ function graphReducer(graph: Graph, action: any) {
             return graph;
 
         case 'connectActivities':
-            const { sourceId, targetId } = action.payload;
+            sourceId = action.payload.sourceId;
+            targetId = action.payload.targetId;
             graph.connectActivities(sourceId, targetId, false);
+            return graph;
+
+        case 'disconnectActivities':
+            sourceId = action.payload.sourceId;
+            targetId = action.payload.targetId;
+            const semaphoreToRemove: Semaphore = action.payload.semaphoreToRemove;
+            graph.disconnectActivities(sourceId, targetId, semaphoreToRemove);
             return graph;
 
         default:

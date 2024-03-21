@@ -37,6 +37,18 @@ class Activity {
         this.outSemaphores.push(semaphore);
     }
 
+    public removeOutSemaphore(semaphoreToRemove: Semaphore) {
+        if (!semaphoreToRemove) {
+            console.error("semaphore is null");
+            return;
+        }
+
+        const index = this.outSemaphores.findIndex(semaphore => semaphore.id === semaphoreToRemove.id);
+        if (index > -1) {
+            this.outSemaphores.splice(index, 1);
+        }
+    }
+
     public addInSemaphore(semaphore: Semaphore) {
         if (!semaphore) {
             console.error("semaphore is null");
@@ -44,6 +56,18 @@ class Activity {
         }
 
         this.inSemaphores.push(semaphore);
+    }
+
+    public removeInSemaphore(semaphoreToRemove: Semaphore) {
+        if (!semaphoreToRemove) {
+            console.error("semaphore is null");
+            return;
+        }
+
+        const index = this.inSemaphores.findIndex(semaphore => semaphore.id === semaphoreToRemove.id);
+        if (index > -1) {
+            this.inSemaphores.splice(index, 1);
+        }
     }
 
     public trigger() {

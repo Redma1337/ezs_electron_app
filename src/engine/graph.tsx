@@ -92,9 +92,28 @@ class Graph {
     }
 
     // deConnectActivities
+    public disconnectActivities(sourceActivityId: number, targetActivityId: number, semaphoreToRemove: Semaphore) {
+        if (sourceActivityId === targetActivityId) {
+            console.error("Cannot disconnect an activity from itself");
+            return;
+        }
 
+        if (!semaphoreToRemove) {
+            console.error("Semaphore is null");
+        }
 
+        const sourceActivity = this.getActivityById(sourceActivityId);
+        const targetActivity = this.getActivityById(targetActivityId);
 
+        if (!sourceActivity || !targetActivity) {
+            console.error("Activity not found");
+            return;
+        }
+
+        sourceActivity.removeOutSemaphore(semaphoreToRemove);
+        targetActivity.removeInSemaphore(semaphoreToRemove);
+        console.log(`disconnected activity with id: ${sourceActivityId} and ${targetActivityId}.`);
+    }
 
     walk() {
         // Search for nodes that have only active input semaphores
