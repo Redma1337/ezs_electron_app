@@ -4,14 +4,16 @@ import Activity from "../engine/activity";
 import { GraphContext } from './graphContext';
 import Semaphore from '../engine/semaphore';
 import { connect } from 'net';
+import { FileHandler } from '../engine/fileHandler';
 
 type OptionsComponentProps = {
     selectedNode: Node
     nodes: Node[]
+    setNodes: React.Dispatch<React.SetStateAction<Node<any, string>[]>>
     onUpdateNode: any
 }
 
-const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponentProps) => {
+const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: OptionsComponentProps) => {
 
     const { state, dispatch } = useContext(GraphContext);
     const { setEdges } = useContext(GraphContext);
@@ -20,6 +22,37 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
     useEffect(() => {
         setSelectedOutSemaphore('')
     }, [selectedNode]);
+
+    // usefilepicker
+    const { openFilePicker, parsedData } = FileHandler();
+
+    const handleAddActivity = (newActivityTask: string) => {
+        const nodeId = Math.floor(Math.random() * 10000);
+        const newNode: Node = {
+            id: nodeId.toString(),
+            type: "activity",
+            position: { x: 0, y: 0 },
+            data: { activity: new Activity(nodeId, newActivityTask, 0), label: `activity node` },
+        };
+        dispatch({
+            type: 'addActivity',
+            payload: { task: newActivityTask, id: nodeId.toString(), priority: 0 }
+        });
+        setNodes((nds: Node<any, string>[]) => nds.concat(newNode));
+    };
+
+    const handleFileContent = () => {
+        parsedData.forEach(row => {
+            const taskName = row[0];
+            if (taskName) {
+                handleAddActivity(taskName);
+            }
+        });
+    };
+
+    useEffect(() => {
+        handleFileContent();
+    }, [parsedData]);
 
     const onDragStart = (event: React.DragEvent, nodeType: string) => {
         event.dataTransfer.setData('application/reactflow', nodeType);
@@ -91,6 +124,10 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                 onDragStart={(event) => onDragStart(event, 'activity')} draggable>
                                 Activity Node
                             </div>
+                            <button
+                                onClick={() => openFilePicker()}
+                                className="text-white bg-blue-700 p-2 px-4 rounded shadow"
+                            >Select files</button>
                         </div>
                     </div>
                     :
@@ -152,10 +189,9 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                         </div>
                                     );
                                 })}
-
-
                             </div>
                         </div>
+
                         <div className="flex flex-col p-5 gap-5 border-t border-slate-200">
                             <h2 className="font-semibold">Components</h2>
                             <div className="px-2 p-1 rounded shadow border border-red-200 text-center"
@@ -166,6 +202,10 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                 onDragStart={(event) => onDragStart(event, 'activity')} draggable>
                                 Activity Node
                             </div>
+                            <button
+                                onClick={() => openFilePicker()}
+                                className="text-white bg-blue-700 p-2 px-4 rounded shadow"
+                            >Select files</button>
                         </div>
                     </div>
             }

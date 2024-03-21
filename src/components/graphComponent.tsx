@@ -26,6 +26,7 @@ import activity from "../engine/activity";
 import { GraphContext } from './graphContext';
 import { useGraph } from './graphContext';
 import SplitEdgeNode from "./flowgraph/components/orNode";
+import { FileHandler } from '../engine/fileHandler'; 
 
 const nodeTypes: NodeTypes = {
     activity: ActivityNode,
@@ -98,7 +99,6 @@ const GraphComponent = () => {
                     data: { mutex: new Mutex(nodeId, "empty mutex"), label: `${type} node` },
                 };
             }
-            
 
             setNodes((nds) => nds.concat(newNode));
             dispatch({ type: 'addActivity', payload: { id: nodeId, task: "emptyNode", priority: 0 } })
@@ -131,33 +131,7 @@ const GraphComponent = () => {
         );
     }, [selectedNode, setSelectedNode, setNodes]);
 
-    // usefilepicker
-    const { openFilePicker, parsedData } = FileHandler();
-
-    const handleAddActivity = (newActivityTask: string) => {
-        dispatchGraph({
-            type: 'addActivity',
-            payload: { task: newActivityTask }
-        });
-        setActivityComponents(prevComponents => {
-            const newActivity = new Activity(graphState.activities.length + prevComponents.length + 1, newActivityTask);
-            return [...prevComponents, { activity: newActivity, position: { x: 0, y: 0 } }];
-        });
-        setNewActivityTask("");
-    };
-
-    const handleFileContent = () => {
-        parsedData.forEach(row => {
-            const taskName = row[0];
-            if (taskName) {
-                handleAddActivity(taskName);
-            }
-        });
-    };
-
-    useEffect(() => {
-        handleFileContent();
-    }, [parsedData]);
+    
 
     return (
         <div className="w-full h-full flex shadow">
@@ -166,6 +140,7 @@ const GraphComponent = () => {
                     <OptionsComponent
                         selectedNode={selectedNode}
                         nodes={nodes}
+                        setNodes={setNodes}
                         onUpdateNode={updateSelectedNodeData}
                     />
                     <ReactFlow
@@ -189,49 +164,6 @@ const GraphComponent = () => {
                     </ReactFlow>
                 </GraphContext.Provider>
             </ReactFlowProvider>
-        <div className="bg-gray-200 w-full h-full flex">
-            <div
-                className="bg-red-400 h-screen w-full"
-            >
-                {
-                    activityComponents.map((component, index) => (
-                        <ActivityComponent
-                            key={index}
-                            activity={component.activity}
-                            position={component.position}
-                            onDrag={(deltaX, deltaY) => handleDrag(index, deltaX, deltaY)}
-                        />
-                    ))
-                }
-            </div>
-            <div className="h-full bg-black flex flex-col gap-5 p-4">
-                <input
-                    type="text"
-                    value={newActivityTask}
-                    onChange={e => setNewActivityTask(e.target.value)}
-                    placeholder="New Activity Task"
-                    className="rounded p-2 px-4 w-full shadow"
-                />
-                <input
-                    type="text"
-                    value={newActivityTask}
-                    onChange={e => setNewActivityTask(e.target.value)}
-                    placeholder="New Activity Task"
-                    className="rounded p-2 px-4 w-full shadow"
-                />
-                <button
-                    className="text-white bg-blue-700 p-2 px-4 rounded shadow"
-                    onClick={() => handleAddActivity(newActivityTask)}
-                >
-                    Add Activity
-                </button>
-
-                <button
-                    onClick={() => openFilePicker()}
-                    className="text-white bg-blue-700 p-2 px-4 rounded shadow"
-                >Select files</button>
-                <br />
-            </div>
         </div>
     );
 }
