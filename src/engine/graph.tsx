@@ -27,6 +27,10 @@ class Graph {
         return this.mutexes.find(mutex => mutex.mutexName === mutexName);
     }
 
+    private getMutexById(mutexId: number): Mutex | undefined {
+        return this.mutexes.find(mutex => mutex.id === mutexId);
+    }
+
     private getPriorityById(activityId: number): number | undefined {
         const activity = this.getActivityById(activityId);
         return activity.getPriority();
@@ -41,7 +45,21 @@ class Graph {
         let id = this.mutexes.length + 1;
         const newMutex = new Mutex(id, mutexName);
         this.mutexes.push(newMutex);
+
         return newMutex;
+    }
+
+    public removeMutex(mutexName: number) {
+        console.log("Mutex Name: ", mutexName);
+        let mutexToRemove = this.getMutexById(mutexName);
+        console.log("Mutex to remove: ", mutexToRemove);
+        // remove mutex from all activities
+        mutexToRemove.sortedActivities.forEach(activity => {
+            this.disconnectFromMutex(activity.id, mutexToRemove.mutexName);
+        });
+        //remove mutex from mutexes
+        this.mutexes.splice(this.mutexes.indexOf(mutexToRemove), 1);
+        console.log(`Removed Mutex '${mutexName}'.`);
     }
 
     public connectToMutex(activityId: number, mutexName: string) {
@@ -56,16 +74,27 @@ class Graph {
         let activity = this.getActivityById(activityId);
         let priority = this.getPriorityById(activityId);
 
-        mutexToUpdate.addActivity(activity);
         activity.assignMutex(mutexToUpdate);
+        mutexToUpdate.addActivity(activity);
+
+        //pcp:
+        mutexToUpdate.setPcpPriority(this.activities); // hier weil muss alle Activities kennen um Prio zu setzen
 
         console.log(`Added Activity ID ${activityId} to Mutex '${mutexName}' priority ${priority}.`);
 
         return;
     }
 
-    public deconnectFromMutex(activityId: number, mutexName: string) { //TODO
+    public disconnectFromMutex(activityId: number, mutexName: string) { //TODO
+        let activityToRemove = this.getActivityById(activityId);
+        let mutexToUpdate = this.getMutexByName(mutexName);
 
+        activityToRemove.mutexes = activityToRemove.mutexes.filter(mutex => mutex.mutexName !== mutexName);
+        //TODO: remove activity from mutex
+        //TODO: remove mutex from activity
+
+        //TODO: //pcp:
+        mutexToUpdate.setPcpPriority(this.activities);
     }
 
     // maybe connectActivities
@@ -90,19 +119,41 @@ class Graph {
         targetActivity.addInSemaphore(connection);
     }
 
-    // deConnectActivities
-
-
+    // disConnectActivities
 
 
     walk() {
+        // this.activities.forEach(activity => {
+        //     console.log("Activity: ", activity.task, " Mutexes: ", activity.mutexes, "Inherited Prio: ", activity.inheritedPriority);
+        // });
+
         // Search for nodes that have only active input semaphores
-        let validNodes = this.activities.filter(activity => activity.isValid()); // bruach ich hier nicht mehr? eiegntlich 
+        let validNodes = this.activities.filter(activity => activity.isValid());
 
         // sort and filter nodes by mutex priority 
         validNodes = this.mutexHandler.handleMutexe(validNodes, this.mutexes);
 
-        validNodes.forEach(activity => activity.trigger());
+        // this.activities.forEach(activity => {
+        //     console.log("Activity: ", activity.task, " - blocked Mutexes: ", activity.blockedMutexes)
+        // });
+
+        // trigger valid nodes if work done
+        validNodes.forEach(activity => {
+            console.log(`Activity ${activity.task} workload: ${activity.currentWorkload}/${activity.workload}`);
+            if (!activity.work()) {
+                activity.releaseLocks(); // release Mutexes
+                activity.trigger();
+            }
+        });
+
+        // release all mutexes that are not completely blocked 
+        this.activities.forEach(activity => {
+            //console.log("Activity: ", activity.task, " - hasMutexBlocked: ", activity.hasMutexBlocked());
+            if (!activity.hasMutexBlocked()) {
+                //console.log("Released Mutexes: ", activity.blockedMutexes);
+                activity.releaseLocks();
+            }
+        });
     }
 
     public print() {
