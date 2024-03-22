@@ -37,13 +37,13 @@ class Activity {
         this.outSemaphores.push(semaphore);
     }
 
-    public removeOutSemaphore(semaphoreToRemove: Semaphore) {
-        if (!semaphoreToRemove) {
+    public removeOutSemaphore(semaphoreIdToRemove: string) {
+        if (!semaphoreIdToRemove) {
             console.error("semaphore is null");
             return;
         }
 
-        const index = this.outSemaphores.findIndex(semaphore => semaphore.id === semaphoreToRemove.id);
+        const index = this.outSemaphores.findIndex(semaphore => semaphore.id === semaphoreIdToRemove);
         if (index > -1) {
             this.outSemaphores.splice(index, 1);
         }
@@ -58,13 +58,13 @@ class Activity {
         this.inSemaphores.push(semaphore);
     }
 
-    public removeInSemaphore(semaphoreToRemove: Semaphore) {
-        if (!semaphoreToRemove) {
+    public removeInSemaphore(semaphoreIdToRemove: string) {
+        if (!semaphoreIdToRemove) {
             console.error("semaphore is null");
             return;
         }
 
-        const index = this.inSemaphores.findIndex(semaphore => semaphore.id === semaphoreToRemove.id);
+        const index = this.inSemaphores.findIndex(semaphore => semaphore.id === semaphoreIdToRemove);
         if (index > -1) {
             this.inSemaphores.splice(index, 1);
         }
@@ -96,9 +96,9 @@ class Activity {
     }
 
     public print() {
-        console.log(this.task);
-        this.inSemaphores.forEach(semaphore => console.log(this.task, " in ", semaphore.isActive()))
-        this.outSemaphores.forEach(semaphore => console.log(this.task, " out ", semaphore.isActive()))
+        console.log(this.id);
+        this.inSemaphores.forEach(semaphore => console.log(this.id, " in ", semaphore.isActive()))
+        this.outSemaphores.forEach(semaphore => console.log(this.id, " out ", semaphore.isActive()))
     }
 }
 

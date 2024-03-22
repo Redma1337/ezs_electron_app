@@ -19,9 +19,8 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
     const { state, dispatch } = useGraph();
     const { setEdges } = useGraph();
     const [selectedOutSemaphore, setSelectedOutSemaphore] = useState('');
-
+    const { nodeToDelete, setNodeToDelete } = useGraph();
     
-
     useEffect(() => {
         setSelectedOutSemaphore('')
     }, [selectedNode]);
@@ -91,7 +90,6 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
         selectedNode.data.activity.outSemaphores = updatedSemaphores;
         removeEdge(selectedNode.id, targetNode.id);
         dispatch({ type: 'disconnectActivities', payload: { sourceId: selectedNode.data.activity.id, targetId: targetNode.data.activity.id, semaphoreToRemove: semaphoreToRemove }});
-
     };
 
     const newEdge = (source: string, target: string) => {
@@ -110,7 +108,40 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
         setEdges((currentEdges) =>
             currentEdges.filter((edge) => !(edge.source === source && edge.target === target))
         );
+        console.log("removed edge from "+source+"to"+target);
     };
+
+    useEffect(() => {
+        if (nodeToDelete) {
+            const updatedNodes = nodes.map(node => {
+                if (node.data.activity && node.data.activity.outSemaphores.length > 0) {
+                    const semaphoreToRemove: Semaphore = node.data.activity.outSemaphores.find((semaphore: { targetActivity: { id: string; }; }) => semaphore.targetActivity.id === nodeToDelete);
+                    if (semaphoreToRemove) {
+                        dispatch({ type: 'disconnectActivities', payload: { sourceId: node.data.activity.id, targetId: nodeToDelete, semaphoreIdToRemove: semaphoreToRemove.id } });
+                    }
+                    const filteredOutSemaphores = node.data.activity.outSemaphores.filter((semaphore: { targetActivity: { id: string; }; }) => semaphore.targetActivity.id !== nodeToDelete);
+                    return {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            activity: {
+                                ...node.data.activity,
+                                outSemaphores: filteredOutSemaphores,
+                            },
+                        },
+                    };
+                }
+                return node;
+            });
+
+            setNodes(updatedNodes);
+
+            console.log(`Semaphores targeting node ${nodeToDelete} have been removed.`);
+
+            setNodeToDelete(null);
+        }
+    }, [nodeToDelete, setNodeToDelete]);
+
 
     return (
         <div className="w-[300px] flex flex-col justify-between">

@@ -101,27 +101,29 @@ class Graph {
         console.log(`Added connection between activity with id: ${sourceActivityId} and ${targetActivityId}.`);
     }
 
-    // deConnectActivities
-    public disconnectActivities(sourceActivityId: number, targetActivityId: number, semaphoreToRemove: Semaphore) {
+    // disconnectActivities
+    public disconnectActivities(sourceActivityId: number, targetActivityId: number, semaphoreIdToRemove: string) {
         if (sourceActivityId === targetActivityId) {
             console.error("Cannot disconnect an activity from itself");
             return;
         }
 
-        if (!semaphoreToRemove) {
+        if (!semaphoreIdToRemove) {
             console.error("Semaphore is null");
         }
 
         const sourceActivity = this.getActivityById(sourceActivityId);
         const targetActivity = this.getActivityById(targetActivityId);
 
-        if (!sourceActivity || !targetActivity) {
+        if (!sourceActivity && !targetActivity) {
             console.error("Activity not found");
             return;
         }
 
-        sourceActivity.removeOutSemaphore(semaphoreToRemove);
-        targetActivity.removeInSemaphore(semaphoreToRemove);
+        sourceActivity.removeOutSemaphore(semaphoreIdToRemove);
+        if (!(targetActivity == undefined)) {
+            targetActivity.removeInSemaphore(semaphoreIdToRemove);
+        }
         console.log(`disconnected activity with id: ${sourceActivityId} and ${targetActivityId}.`);
     }
 

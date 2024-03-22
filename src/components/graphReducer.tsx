@@ -13,11 +13,17 @@ function graphReducer(graph: Graph, action: any) {
         case 'addActivity':
             const newActivity = new Activity(action.payload.id, action.payload.task, action.payload.priority);
             graph.addActivity(newActivity);
+
+            graph.print();
+
             return graph;
 
         case 'removeActivity':
             const activityToRemove = action.payload.activityToRemove;
             graph.removeActivity(activityToRemove);
+
+            graph.print();
+
             return graph;
 
         case 'addMutexToActivity': {
@@ -69,13 +75,21 @@ function graphReducer(graph: Graph, action: any) {
             sourceId = action.payload.sourceId;
             targetId = action.payload.targetId;
             graph.connectActivities(sourceId, targetId, false);
+
+            graph.print();
+
             return graph;
 
         case 'disconnectActivities':
             sourceId = action.payload.sourceId;
             targetId = action.payload.targetId;
-            const semaphoreToRemove: Semaphore = action.payload.semaphoreToRemove;
-            graph.disconnectActivities(sourceId, targetId, semaphoreToRemove);
+            const semaphoreIdToRemove: string = action.payload.semaphoreIdToRemove;
+            console.log(graph);
+            console.log(semaphoreIdToRemove);
+            graph.disconnectActivities(sourceId, targetId, semaphoreIdToRemove);
+
+            graph.print();
+
             return graph;
 
         default:

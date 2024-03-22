@@ -5,14 +5,14 @@ import Graph from "../engine/graph";
 import graphReducer from './graphReducer';
 import { Edge } from 'reactflow';
 
-
 // Define the type of the context
 interface GraphContextType {
     state: Graph;
     dispatch: Dispatch<any>;
     edges?: Edge[]; 
     setEdges?: React.Dispatch<React.SetStateAction<Edge[]>>;
-    nodeToDelete?: Node
+    nodeToDelete: string | null; 
+    setNodeToDelete: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 // Create the context with an null default value
@@ -25,9 +25,10 @@ interface GraphProviderProps {
 // Define a provider component with the corrected type
 export const GraphProvider: React.FC<GraphProviderProps> = ({ children }) => {
     const [state, dispatch] = React.useReducer(graphReducer, new Graph());
+    const [nodeToDelete, setNodeToDelete] = React.useState<string | null>(null);
 
     return (
-        <GraphContext.Provider value={{ state, dispatch }}>
+        <GraphContext.Provider value={{ state, dispatch, nodeToDelete, setNodeToDelete }}>
             {children}
         </GraphContext.Provider>
     );
