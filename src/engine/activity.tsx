@@ -132,6 +132,14 @@ class Activity {
         return this.inheritedPriority;
     }
 
+    public getWorkload(): number {
+        return this.workload;
+    }
+
+    public getCurrentWorkload(): number {
+        return this.currentWorkload;
+    }
+
     public removeMutex(mutex: Mutex) {
         this.mutexes = this.mutexes.filter(m => m.mutexName !== mutex.mutexName);
         this.sortMutexes();
