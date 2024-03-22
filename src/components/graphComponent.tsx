@@ -66,7 +66,6 @@ const GraphComponent = () => {
                 if (nodeToRemove && nodeToRemove.data.activity) {
                     const activityToRemove = nodeToRemove.data.activity;
                     setNodeToDelete(activityToRemove.id);
-                    console.log(`Removing activity with id: ${activityToRemove.id}`);
                     dispatch({
                         type: 'removeActivity',
                         payload: { activityToRemove }

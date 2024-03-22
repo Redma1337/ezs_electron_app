@@ -94,7 +94,7 @@ class Graph {
         }
 
         //this shares a reference of the semaphore to both activities which makes controlling bot easy
-        const connection = new Semaphore(isActive, 's' + sourceActivity.id + '-' + targetActivity.id, targetActivity)
+        const connection = new Semaphore(isActive, 's' + sourceActivity.id + '-' + targetActivity.id, sourceActivity, targetActivity)
 
         sourceActivity.addOutSemaphore(connection);
         targetActivity.addInSemaphore(connection);
@@ -119,13 +119,36 @@ class Graph {
             console.error("Activity not found");
             return;
         }
-
-        sourceActivity.removeOutSemaphore(semaphoreIdToRemove);
+        if (!(sourceActivity == undefined)) {
+            sourceActivity.removeOutSemaphore(semaphoreIdToRemove);
+        }
         if (!(targetActivity == undefined)) {
             targetActivity.removeInSemaphore(semaphoreIdToRemove);
         }
+
         console.log(`disconnected activity with id: ${sourceActivityId} and ${targetActivityId}.`);
     }
+
+    public removeInvalidSemaphores() {
+        // remove semaphores with non-existing source/target-activites
+        this.activities.forEach(activity => {
+            const outSemaphoresToRemove = activity.outSemaphores.filter(semaphore =>
+                !this.activities.some(act => act.id === semaphore.targetActivity.id)
+            );
+            outSemaphoresToRemove.forEach(semaphore => {
+                activity.removeOutSemaphore(semaphore.id);
+            })
+
+            const inSemaphoresToRemove = activity.inSemaphores.filter(semaphore =>
+                !this.activities.some(act => act.id === semaphore.sourceActivity.id)
+            );
+            inSemaphoresToRemove.forEach(semaphore => {
+                activity.removeInSemaphore(semaphore.id);
+            })
+        });
+    }
+
+
 
     walk() {
         // Search for nodes that have only active input semaphores
@@ -143,7 +166,7 @@ class Graph {
             console.log();
         })
     }
-    
+
     printSemaphores() {
         console.log("");
         console.log("-- Active Semaphores --");

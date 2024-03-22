@@ -2,12 +2,14 @@ import Activity from "./activity";
 
 class Semaphore {
     private active_state: boolean;
+    public readonly sourceActivity: Activity;
     public readonly targetActivity: Activity;
     public readonly id: string;
 
-    constructor(isActive: boolean, id: string, targetActivity: Activity) {
+    constructor(isActive: boolean, id: string, sourceActivity: Activity, targetActivity: Activity) {
         this.active_state = isActive;
         this.id = id;
+        this.sourceActivity = sourceActivity;
         this.targetActivity = targetActivity;
     }
 
