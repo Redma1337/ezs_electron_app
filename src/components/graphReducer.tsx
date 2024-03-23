@@ -94,6 +94,11 @@ function graphReducer(graph: Graph, action: any) {
             graph.connectActivities(sourceId, targetId, false);
             return graph;
 
+        case 'toggleSemaphore':
+            const semaphoreId = action.payload.semaphoreId;
+            graph.toggleSemaphore(semaphoreId);
+            return graph;
+
         case 'print':
             graph.print();
             graph.printSemaphores();

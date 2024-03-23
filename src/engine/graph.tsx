@@ -141,6 +141,27 @@ class Graph {
         console.log(`Added connection between activity with id: ${sourceActivityId} and ${targetActivityId}.`);
     }
 
+    public toggleSemaphore(semaphoreId: string) {
+        // Search through all activities
+        console.log("toggle Semaphore")
+        this.activities.forEach(activity => {
+            // Check in outSemaphores
+            console.log("toggle Semaphore foreach activity")
+
+            activity.outSemaphores.forEach(semaphore => {
+                console.log("toggle Semaphore foreach activity foreach outSemaphore")
+                console.log(semaphore.id);
+                console.log(semaphoreId);
+
+                if (semaphore.id === semaphoreId) {
+                    semaphore.isActive() ? semaphore.off() : semaphore.on();
+                    console.log(`Toggled Semaphore: ${semaphoreId} to ${semaphore.isActive()}`);
+                }
+            });
+        });
+    }
+
+
     // disconnectActivities
     public disconnectActivities(sourceActivityId: number, targetActivityId: number, semaphoreIdToRemove: string) {
         if (sourceActivityId === targetActivityId) {

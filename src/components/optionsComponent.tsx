@@ -21,6 +21,7 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
     const { setEdges } = useGraph();
     const [selectedOutSemaphore, setSelectedOutSemaphore] = useState('');
     const [selectedMutex, setSelectedMutex] = useState('');
+    const [toggleRefresh, setToggleRefresh] = useState(false);
 
     useEffect(() => {
         setSelectedOutSemaphore('')
@@ -111,6 +112,13 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
         removeEdge(selectedNode.id, targetNode.id);
         dispatch({ type: 'disconnectActivities', payload: { sourceId: selectedNode.data.activity.id, targetId: targetNode.data.activity.id, semaphoreToRemove: semaphoreToRemove } });
     };
+
+    const toggleSemaphore = (semaphoreId: string) => {
+        const semaphoreToToggle = selectedNode.data.activity.outSemaphores.find((semaphore: { id: string }) => semaphore.id === semaphoreId);
+        semaphoreToToggle.isActive() ? semaphoreToToggle.off() : semaphoreToToggle.on();
+        dispatch({ type: 'toggleSemaphore', payload: { semaphoreId: semaphoreId } });
+        setToggleRefresh(prev => !prev); // force rerender
+    }
 
     const deleteMutex = (mutexId: number) => {
         const mutexToRemove = selectedNode.data.activity.mutexes.find((mutex: { id: number }) => mutex.id === mutexId);
@@ -262,6 +270,11 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
                                 {selectedNode.data.activity.outSemaphores.map(function (semaphore: Semaphore, index: number) {
                                     return (
                                         <div key={semaphore.id} className="flex items-center justify-between space-x-2 p-1 m-1 rounded shadow border border-slate-200 w-full">
+                                            <button
+                                                onClick={() => toggleSemaphore(semaphore.id)}
+                                                className={`${semaphore.isActive() ? 'bg-green-500 hover:bg-green-700' : 'bg-red-500 hover:bg-red-700'} text-white py-1 px-2 rounded`}>
+                                                {semaphore.isActive() ? 'on' : 'off'}
+                                            </button>
                                             <span>{semaphore.targetActivity.id}</span>
                                             <button
                                                 onClick={() => deleteSemaphore(semaphore.id)}
