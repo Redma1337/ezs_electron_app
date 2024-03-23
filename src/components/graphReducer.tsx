@@ -24,10 +24,20 @@ function graphReducer(graph: Graph, action: any) {
             graph.removeInvalidSemaphores();
             return graph;
 
+        case 'addMutex':
+            const { id, mutexName }= action.payload;
+            graph.addMutex(id, mutexName);
+            return graph;
+
         case 'addMutexToActivity': {
             const { activityId, mutexName } = action.payload;
-            graph.addMutex(mutexName);
             graph.connectToMutex(activityId, mutexName);
+            return graph;
+        }
+
+        case 'disconnectMutexFromActivity': {
+            const { activityId, mutexName } = action.payload;
+            graph.disconnectFromMutex(activityId, mutexName);
             return graph;
         }
 
@@ -58,8 +68,8 @@ function graphReducer(graph: Graph, action: any) {
             graph.connectActivities(activity5b.id, activity5a.id, true);
             graph.connectActivities(activity5b.id, activity1.id, true);
 
-            graph.addMutex("m23");
-            graph.addMutex("m34");
+            graph.addMutex(1, "m23");
+            graph.addMutex(2, "m34");
 
             graph.connectToMutex(2, "m23");
             graph.connectToMutex(3, "m23");

@@ -42,15 +42,15 @@ class Graph {
         return activity.getPriority();
     }
 
-    public addMutex(mutexName: string): Mutex {
+    public addMutex(mutexId: number, mutexName: string): Mutex {
         let mutexToUpdate = this.getMutexByName(mutexName);
-        if (mutexToUpdate) {
-            alert(`Mutex '${mutexName}' already exists.`);
-            return;
-        }
-        let id = this.mutexes.length + 1;
-        const newMutex = new Mutex(id, mutexName);
+        //if (mutexToUpdate) {
+        //    alert(`Mutex '${mutexName}' already exists.`);
+        //    return;
+        //}
+        const newMutex = new Mutex(mutexId, mutexName);
         this.mutexes.push(newMutex);
+        console.log(`Added Mutex: ${mutexName} id ${mutexId}`);
         return newMutex;
     }
 
@@ -74,8 +74,16 @@ class Graph {
         return;
     }
 
-    public deconnectFromMutex(activityId: number, mutexName: string) { //TODO
+    public disconnectFromMutex(activityId: number, mutexName: string) { //TODO
+        console.log(mutexName);
+        let mutexToUpdate = this.getMutexByName(mutexName);
+        console.log(mutexToUpdate);
+        let activity = this.getActivityById(activityId);
+        activity.removeMutex(mutexToUpdate);
+        mutexToUpdate.removeActivityId(activityId);
 
+        console.log(`Disconnected Activity ID ${activityId} from Mutex '${mutexName}'.`);
+        return;
     }
 
     // maybe connectActivities
@@ -147,8 +155,6 @@ class Graph {
             })
         });
     }
-
-
 
     walk() {
         // Search for nodes that have only active input semaphores

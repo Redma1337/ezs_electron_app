@@ -109,17 +109,18 @@ const GraphComponent = () => {
                     position,
                     data: { activity: new Activity(nodeId, "empty Node", 0), label: `${type} node` },
                 };
+                dispatch({ type: 'addActivity', payload: { id: nodeId, task: "emptyNode", priority: 0 } })
             } else if (type === 'mutex') {
                 newNode = {
                     id: nodeId.toString(),
                     type,
                     position,
-                    data: { mutex: new Mutex(nodeId, "empty mutex"), label: `${type} node` },
+                    data: { mutex: new Mutex(nodeId, "Mutex"+nodeId), label: `${type} node` },
                 };
+                dispatch({ type: 'addMutex', payload: { id: nodeId, mutexName: "Mutex"+nodeId } })
             }
 
             setNodes((nds) => nds.concat(newNode));
-            dispatch({ type: 'addActivity', payload: { id: nodeId, task: "emptyNode", priority: 0 } })
         },
         [reactFlowInstance],
     );

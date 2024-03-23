@@ -41,6 +41,9 @@ class Mutex {
     }
 
     getFirstPriority(): number {
+        if (!this.sortedActivities[0]) {
+            return 0;
+        }
         return this.sortedActivities[0].getPriority();
     }
 

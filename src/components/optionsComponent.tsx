@@ -6,6 +6,7 @@ import Semaphore from '../engine/semaphore';
 import { connect } from 'net';
 import { FileHandler } from '../engine/fileHandler';
 import { useGraph } from './graphContext';
+import Mutex from '../engine/mutex';
 
 type OptionsComponentProps = {
     selectedNode: Node
@@ -19,10 +20,15 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
     const { state, dispatch } = useGraph();
     const { setEdges } = useGraph();
     const [selectedOutSemaphore, setSelectedOutSemaphore] = useState('');
+    const [selectedMutex, setSelectedMutex] = useState('');
     const { nodeToDelete, setNodeToDelete } = useGraph();
 
     useEffect(() => {
         setSelectedOutSemaphore('')
+    }, [selectedNode]);
+
+    useEffect(() => {
+        setSelectedMutex('')
     }, [selectedNode]);
 
     // usefilepicker
@@ -81,6 +87,21 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
         }
     };
 
+    const addMutexToActivity = (mutexId: string): void => {
+        const mutexNode = nodes.find(node => node.id === mutexId);
+        const mutexExists = selectedNode.data.activity.mutexes.some((mutex: { id: string }) => mutex.id === mutexNode.data.mutex.id);
+
+        if (!mutexNode || mutexExists) {
+            console.log("mutex doesn't exist or already connected");
+            return;
+        }
+
+        dispatch({ type: 'addMutexToActivity', payload: { activityId: selectedNode.data.activity.id, mutexName: mutexNode.data.mutex.mutexName } });
+        selectedNode.data.activity.assignMutex(mutexNode.data.mutex);
+        newEdge(selectedNode.id, mutexId)
+        console.log(nodes);
+    };
+
     const deleteSemaphore = (semaphoreId: string) => {
         const semaphoreToRemove = selectedNode.data.activity.outSemaphores.find((semaphore: { id: string }) => semaphore.id === semaphoreId);
         const targetActivity = semaphoreToRemove.targetActivity;
@@ -90,6 +111,13 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
         selectedNode.data.activity.outSemaphores = updatedSemaphores;
         removeEdge(selectedNode.id, targetNode.id);
         dispatch({ type: 'disconnectActivities', payload: { sourceId: selectedNode.data.activity.id, targetId: targetNode.data.activity.id, semaphoreToRemove: semaphoreToRemove } });
+    };
+
+    const deleteMutex = (mutexId: number) => {
+        const mutexToRemove = selectedNode.data.activity.mutexes.find((mutex: { id: number }) => mutex.id === mutexId);
+        selectedNode.data.activity.removeMutex(mutexToRemove);
+        removeEdge(selectedNode.id, mutexId.toString());
+        dispatch({ type: 'disconnectMutexFromActivity', payload: { activityId: selectedNode.data.activity.id, mutexName: mutexToRemove.mutexName } });
     };
 
     const newEdge = (source: string, target: string) => {
@@ -215,6 +243,43 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
                                             <span>{semaphore.targetActivity.id}</span>
                                             <button
                                                 onClick={() => deleteSemaphore(semaphore.id)}
+                                                className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <div>
+                                <h2 className="font-semibold">Mutexes</h2>
+                                <div className="flex items-center">
+                                    <select
+                                        id="mutexSelector"
+                                        className="border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 mr-2"
+                                        onChange={(e) => setSelectedMutex(e.target.value)}
+                                        value={selectedMutex}
+                                    >
+                                        <option value={''}></option>
+                                        {nodes
+                                            .filter(node => node.data.mutex && node.id !== selectedNode?.id)
+                                            .map((node) => (
+                                                <option key={node.id} value={node.id}>{node.data.mutex.id}</option>
+                                            ))}
+                                    </select>
+                                    <button
+                                        className={`px-4 py-2 rounded-lg ${selectedMutex ? 'bg-blue-500 hover:bg-blue-700 text-white' : 'bg-blue-200 text-gray-500 cursor-not-allowed'}`}
+                                        onClick={() => addMutexToActivity(selectedMutex)}
+                                        disabled={!selectedMutex}
+                                    >
+                                        Add
+                                    </button>
+                                </div>
+                                {selectedNode.data.activity.mutexes.map(function (mutex: Mutex, index: number) {
+                                    return (
+                                        <div key={index} className="flex items-center justify-between space-x-2 p-1 m-1 rounded shadow border border-slate-200 w-full">
+                                            <span>{mutex.mutexName}</span>
+                                            <button
+                                                onClick={() => deleteMutex(mutex.getId())}
                                                 className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
                                                 Delete
                                             </button>
