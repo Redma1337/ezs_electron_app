@@ -27,6 +27,8 @@ class Mutex {
     addActivity(activity: Activity) {
         if (!this.sortedActivities.some(a => a.id === activity.id)) {
             this.sortedActivities.push(activity);
+            console.log("pushed");
+            console.log(this.sortedActivities);
         }
         this.sortActivitiesInMutex();
         this.setMutexPriority();

@@ -98,6 +98,7 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
 
         dispatch({ type: 'addMutexToActivity', payload: { activityId: selectedNode.data.activity.id, mutexName: mutexNode.data.mutex.mutexName } });
         selectedNode.data.activity.assignMutex(mutexNode.data.mutex);
+        mutexNode.data.mutex.addActivity(selectedNode.data.activity);
         newEdge(selectedNode.id, mutexId)
         console.log(nodes);
     };
@@ -141,29 +142,53 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
 
     const removeInvalidSemaphores = () => {
         nodes.forEach(node => {
-            const outSemaphoresToRemove = node.data.activity.outSemaphores.filter((semaphore: { targetActivity: { id: any; }; }) =>
-                !nodes.some(node => node.data.activity.id === semaphore.targetActivity.id)
-            );
-            outSemaphoresToRemove.forEach((semaphore: { id: any; }) => {
-                node.data.activity.removeOutSemaphore(semaphore.id);
-            })
+            if (node.type === "activity") {
+                const outSemaphoresToRemove = node.data.activity.outSemaphores.filter((semaphore: { targetActivity: { id: any; }; }) =>
+                    !nodes.some(node => node.data.activity?.id === semaphore.targetActivity.id)
+                );
+                outSemaphoresToRemove.forEach((semaphore: { id: any; }) => {
+                    node.data.activity.removeOutSemaphore(semaphore.id);
+                })
 
-            const inSemaphoresToRemove = node.data.activity.inSemaphores.filter((semaphore: { sourceActivity: { id: any; }; }) =>
-                !nodes.some(node => node.data.activity.id === semaphore.sourceActivity.id)
-            );
-            inSemaphoresToRemove.forEach((semaphore: { id: any; }) => {
-                node.data.activity.removeInSemaphore(semaphore.id);
-            })
+                const inSemaphoresToRemove = node.data.activity.inSemaphores.filter((semaphore: { sourceActivity: { id: any; }; }) =>
+                    !nodes.some(node => node.data.activity?.id === semaphore.sourceActivity.id)
+                );
+                inSemaphoresToRemove.forEach((semaphore: { id: any; }) => {
+                    node.data.activity.removeInSemaphore(semaphore.id);
+                })
+            }
+        });
+    };
+
+    const removeInvalidMutexConnections = () => {
+        nodes.forEach(node => {
+            if (node.type === "mutex") {
+                const activityToRemove = node.data.mutex.sortedActivities.filter((activity: { id: string }) =>
+                    !nodes.some(node => node.data.activity?.id === activity.id)
+                );
+                activityToRemove.forEach((activity: { id: string }) => {
+                    node.data.mutex.removeActivityId(activity.id);
+                })
+                console.log(nodes);
+            } else if (node.type === "activity") {
+                const mutexesToRemove = node.data.activity.mutexes.filter((mutex: { id: string }) =>
+                    !nodes.some(node => node.data.mutex?.id === mutex.id)
+                );
+                mutexesToRemove.forEach((mutex: { id: string }) => {
+                    node.data.activity.removeMutex(mutex);
+                })
+            }
         });
     };
 
     useEffect(() => {
         if (nodeToDelete) {
             removeInvalidSemaphores();
+            removeInvalidMutexConnections();
             console.log(`Semaphores of node ${nodeToDelete} have been removed.`);
             setNodeToDelete(null);
         }
-    }, [nodeToDelete, setNodeToDelete]);
+    }, [nodes]);
 
 
 

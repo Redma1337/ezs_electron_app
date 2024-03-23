@@ -71,6 +71,14 @@ const GraphComponent = () => {
                         payload: { activityToRemove }
                     });
                 }
+                else if (nodeToRemove && nodeToRemove.data.mutex) {
+                    const mutexToRemove = nodeToRemove.data.mutex;
+                    setNodeToDelete(mutexToRemove.id);
+                    dispatch({
+                        type: 'removeMutex',
+                        payload: { mutexToRemove }
+                    });
+                }
             }
         });
         onNodesChange(changes);
