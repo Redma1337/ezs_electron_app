@@ -76,6 +76,7 @@ const GraphComponent = () => {
                         payload: { mutexToRemove }
                     });
                 }
+                setSelectedNode(null);
             }
         });
         onNodesChange(changes);
