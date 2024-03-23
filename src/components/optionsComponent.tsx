@@ -167,7 +167,6 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
                 activityToRemove.forEach((activity: { id: string }) => {
                     node.data.mutex.removeActivityId(activity.id);
                 })
-                console.log(nodes);
             } else if (node.type === "activity") {
                 const mutexesToRemove = node.data.activity.mutexes.filter((mutex: { id: string }) =>
                     !nodes.some(node => node.data.mutex?.id === mutex.id)

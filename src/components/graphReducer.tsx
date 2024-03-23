@@ -13,9 +13,6 @@ function graphReducer(graph: Graph, action: any) {
         case 'addActivity':
             const newActivity = new Activity(action.payload.id, action.payload.task, action.payload.priority);
             graph.addActivity(newActivity);
-
-            graph.print();
-
             return graph;
 
         case 'removeActivity':
