@@ -107,7 +107,7 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
     const deleteSemaphore = (semaphoreId: string) => {
         const semaphoreToRemove = selectedNode.data.activity.outSemaphores.find((semaphore: { id: string }) => semaphore.id === semaphoreId);
         const targetActivity = semaphoreToRemove.targetActivity;
-        const targetNode = nodes.find(node => node.data.activity === targetActivity);
+        const targetNode = nodes.find(node => node.data.activity.id === targetActivity.id);
         const updatedSemaphores = selectedNode.data.activity.outSemaphores.filter((semaphore: { id: string }) => semaphore.id !== semaphoreId);
 
         selectedNode.data.activity.outSemaphores = updatedSemaphores;

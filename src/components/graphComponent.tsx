@@ -27,6 +27,7 @@ import { GraphContext } from './graphContext';
 import { useGraph } from './graphContext';
 import SplitEdgeNode from "./flowgraph/components/orNode";
 import { FileHandler } from '../engine/fileHandler'; 
+import Semaphore from '../engine/semaphore';
 
 const nodeTypes: NodeTypes = {
     activity: ActivityNode,
@@ -139,8 +140,20 @@ const GraphComponent = () => {
         const updatedActivity = new Activity(
             activity.id,
             key === 'task' ? value : activity.task, 
-            key === 'priority' ? parseInt(value, 10) : activity.priority 
+            key === 'priority' ? parseInt(value, 10) : activity.priority
         );
+
+        activity.outSemaphores.forEach((semaphore: Semaphore) => {
+            updatedActivity.addOutSemaphore(semaphore);
+        })
+
+        activity.inSemaphores.forEach((semaphore: Semaphore) => {
+            updatedActivity.addInSemaphore(semaphore);
+        })
+
+        activity.mutexes.forEach((mutex: Mutex) => {
+            updatedActivity.assignMutex(mutex);
+        })
 
         const updatedNode = {
             ...selectedNode,
