@@ -11,8 +11,6 @@ interface GraphContextType {
     dispatch: Dispatch<any>;
     edges?: Edge[]; 
     setEdges?: React.Dispatch<React.SetStateAction<Edge[]>>;
-    nodeToDelete: string | null; 
-    setNodeToDelete: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 // Create the context with an null default value
@@ -25,10 +23,9 @@ interface GraphProviderProps {
 // Define a provider component with the corrected type
 export const GraphProvider: React.FC<GraphProviderProps> = ({ children }) => {
     const [state, dispatch] = React.useReducer(graphReducer, new Graph());
-    const [nodeToDelete, setNodeToDelete] = React.useState<string | null>(null);
 
     return (
-        <GraphContext.Provider value={{ state, dispatch, nodeToDelete, setNodeToDelete }}>
+        <GraphContext.Provider value={{ state, dispatch }}>
             {children}
         </GraphContext.Provider>
     );

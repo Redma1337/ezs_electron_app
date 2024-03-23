@@ -31,6 +31,7 @@ export default memo(({ id, selected, data }: NodeProps<MutexNodeData>) => {
                 </div>
                 <div className="border p-2 border-t-black flex justify-center">
                     {data.activity.task}<br/>
+                    {data.activity.priority}<br/>
                     Selected: {JSON.stringify(selected)}<br/>
                     IsTarget: {JSON.stringify(isTarget)}<br/>
                     IsConnected: {JSON.stringify(isConnecting)}<br/>

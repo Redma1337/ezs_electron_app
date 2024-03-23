@@ -21,7 +21,6 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
     const { setEdges } = useGraph();
     const [selectedOutSemaphore, setSelectedOutSemaphore] = useState('');
     const [selectedMutex, setSelectedMutex] = useState('');
-    const { nodeToDelete, setNodeToDelete } = useGraph();
 
     useEffect(() => {
         setSelectedOutSemaphore('')
@@ -97,6 +96,8 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
         }
 
         dispatch({ type: 'addMutexToActivity', payload: { activityId: selectedNode.data.activity.id, mutexName: mutexNode.data.mutex.mutexName } });
+        console.log(selectedNode);
+        console.log(mutexNode.data.mutex)
         selectedNode.data.activity.assignMutex(mutexNode.data.mutex);
         mutexNode.data.mutex.addActivity(selectedNode.data.activity);
         newEdge(selectedNode.id, mutexId)
@@ -116,6 +117,11 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
 
     const deleteMutex = (mutexId: number) => {
         const mutexToRemove = selectedNode.data.activity.mutexes.find((mutex: { id: number }) => mutex.id === mutexId);
+        console.log("selectedNode");
+        console.log(selectedNode);
+        console.log(typeof selectedNode.data.activity.assignMutex); // Should log 'function'
+        console.log(selectedNode.data.activity instanceof Activity); // Should log true if it's an instance of Activity
+
         selectedNode.data.activity.removeMutex(mutexToRemove);
         removeEdge(selectedNode.id, mutexId.toString());
         dispatch({ type: 'disconnectMutexFromActivity', payload: { activityId: selectedNode.data.activity.id, mutexName: mutexToRemove.mutexName } });
@@ -182,13 +188,9 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
     };
 
     useEffect(() => {
-        if (nodeToDelete) {
-            removeInvalidSemaphores();
-            removeInvalidMutexConnections();
-            console.log(`Semaphores of node ${nodeToDelete} have been removed.`);
-            setNodeToDelete(null);
-        }
-    }, [nodes]);
+        removeInvalidSemaphores();
+        removeInvalidMutexConnections();
+    }, [nodes.length]);
 
 
 

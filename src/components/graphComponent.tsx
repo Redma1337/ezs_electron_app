@@ -57,7 +57,6 @@ const GraphComponent = () => {
     const [selectedNode, setSelectedNode] = useState<Node>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const { state, dispatch } = useGraph();
-    const { nodeToDelete, setNodeToDelete } = useGraph();
 
     const handleNodesChange = useCallback((changes: any) => {
         changes.forEach((change: any) => {
@@ -65,7 +64,6 @@ const GraphComponent = () => {
                 const nodeToRemove = nodes.find(node => node.id === change.id);
                 if (nodeToRemove && nodeToRemove.data.activity) {
                     const activityToRemove = nodeToRemove.data.activity;
-                    setNodeToDelete(activityToRemove.id);
                     dispatch({
                         type: 'removeActivity',
                         payload: { activityToRemove }
@@ -73,7 +71,6 @@ const GraphComponent = () => {
                 }
                 else if (nodeToRemove && nodeToRemove.data.mutex) {
                     const mutexToRemove = nodeToRemove.data.mutex;
-                    setNodeToDelete(mutexToRemove.id);
                     dispatch({
                         type: 'removeMutex',
                         payload: { mutexToRemove }
@@ -82,7 +79,7 @@ const GraphComponent = () => {
             }
         });
         onNodesChange(changes);
-    }, [nodes, dispatch, onNodesChange, setNodeToDelete]);
+    }, [nodes, dispatch, onNodesChange]);
 
     const onNodeDragStart = useCallback((event: React.MouseEvent, node: Node, nodes: Node[]) => {
         if (!selectedNode || selectedNode.id !== node.id) {
@@ -133,35 +130,33 @@ const GraphComponent = () => {
         [reactFlowInstance],
     );
 
-    const updateSelectedNodeData = useCallback((key: any, value: any) => {
-        if (!selectedNode) return;
+    const updateSelectedNodeData = useCallback((key: string, value: any) => {
+        // TODO: Update priority in backend
+        if (!selectedNode || !selectedNode.data.activity) return;
 
-        let updatedNode = { ...selectedNode };
+        const activity = selectedNode.data.activity;
+        const updatedActivity = new Activity(
+            activity.id,
+            key === 'task' ? value : activity.task, 
+            key === 'priority' ? parseInt(value, 10) : activity.priority 
+        );
 
-        if (selectedNode.data.activity) {
-            updatedNode = {
-                ...selectedNode,
-                data: {
-                    ...selectedNode.data,
-                    activity: {
-                        ...selectedNode.data.activity,
-                        [key]: value
-                    }
-                }
-            };
-        }
+        const updatedNode = {
+            ...selectedNode,
+            data: {
+                ...selectedNode.data,
+                activity: updatedActivity,
+            },
+        };
 
         setSelectedNode(updatedNode);
-
-        setNodes(currentNodes =>
-            currentNodes.map(node => node.id === updatedNode.id ? updatedNode : node)
-        );
+        setNodes(currentNodes => currentNodes.map(node => node.id === updatedNode.id ? updatedNode : node));
     }, [selectedNode, setSelectedNode, setNodes]);
 
     return (
         <div className="w-full h-full flex shadow">
             <ReactFlowProvider>
-                <GraphContext.Provider value={{ state, dispatch, edges, setEdges, nodeToDelete, setNodeToDelete }}>
+                <GraphContext.Provider value={{ state, dispatch, edges, setEdges }}>
                     <OptionsComponent
                         selectedNode={selectedNode}
                         nodes={nodes}

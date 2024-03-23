@@ -19,6 +19,23 @@ class Graph {
         console.log(`Added Activity: ${activity.task} id ${activity.id} prio ${activity.priority}`);
     }
 
+    public changePriority(activityId: number, newPriority: number) {
+        const activity = this.getActivityById(activityId);
+        if (!activity) {
+            console.error(`Activity with id ${activityId} not found`);
+            return;
+        }
+
+        activity.priority = newPriority;
+        console.log(`Changed priority of Activity: ${activity.task} id ${activity.id} to new priority ${newPriority}`);
+
+        activity.mutexes.forEach(mutex => {
+            mutex.sortActivitiesInMutex();
+            console.log(`Recalculated priorities for Mutex: ${mutex.mutexName}`);
+        });
+    }
+
+
     public removeActivity(activityToRemove: Activity) {
         const index = this.activities.findIndex(activity => activity.id === activityToRemove.id);
         if (index > -1) {
