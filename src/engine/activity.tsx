@@ -9,7 +9,7 @@ class Activity {
 
     constructor(
         public readonly id: number,
-        public readonly task: string,
+        public task: string,
         public priority: number,
     ) {
         this.outSemaphores = [];

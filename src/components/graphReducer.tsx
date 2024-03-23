@@ -24,8 +24,20 @@ function graphReducer(graph: Graph, action: any) {
             graph.removeInvalidSemaphores();
             return graph;
 
+        case 'changePriority': {
+            const { activityId, priority } = action.payload;
+            graph.changePriority(activityId, priority);
+            return graph;
+        }
+
+        case 'changeTask': {
+            const { activityId, task } = action.payload;
+            graph.changeTask(activityId, task);
+            return graph;
+        }
+
         case 'addMutex':
-            const { id, mutexName }= action.payload;
+            const { id, mutexName } = action.payload;
             graph.addMutex(id, mutexName);
             return graph;
 
@@ -48,7 +60,7 @@ function graphReducer(graph: Graph, action: any) {
             const activity4 = new Activity(4, "Task 4", 8);
             const activity5a = new Activity(5, "Task 5a", 3);
             const activity5b = new Activity(6, "Task 5b", 5);
-            const activity6 = new Activity(7, "Task 6",6);
+            const activity6 = new Activity(7, "Task 6", 6);
 
             graph.addActivity(activity1);
             graph.addActivity(activity2);
@@ -84,6 +96,11 @@ function graphReducer(graph: Graph, action: any) {
             targetId = action.payload.targetId;
             graph.connectActivities(sourceId, targetId, false);
             return graph;
+
+        case 'print':
+            graph.print();
+            graph.printSemaphores();
+            graph.seeAssignedMutexes();
 
         default:
             return graph;

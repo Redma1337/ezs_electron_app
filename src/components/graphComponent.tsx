@@ -19,7 +19,7 @@ import FloatingEdge from "./flowgraph/components/floatingEdge";
 import OptionsComponent from "./optionsComponent";
 import { PanelPosition } from "@reactflow/core/dist/esm/types/general";
 import Mutex from "../engine/mutex";
-import { Simulate } from "react-dom/test-utils";
+import { Simulate, act } from "react-dom/test-utils";
 import select = Simulate.select;
 import acitvityNode from "./flowgraph/acitvityNode";
 import activity from "../engine/activity";
@@ -153,6 +153,7 @@ const GraphComponent = () => {
 
         activity.mutexes.forEach((mutex: Mutex) => {
             updatedActivity.assignMutex(mutex);
+            mutex.updateActivityById(updatedActivity.id, updatedActivity);
         })
 
         const updatedNode = {
@@ -163,6 +164,11 @@ const GraphComponent = () => {
             },
         };
 
+        if (key === 'task') {
+            dispatch({ type: 'changeTask', payload: { activityId: updatedActivity.id, priority: updatedActivity.priority } });
+        } else if (key === 'priority') {
+            dispatch({ type: 'changePriority', payload: { activityId: updatedActivity.id, priority: updatedActivity.priority } });
+        }
         setSelectedNode(updatedNode);
         setNodes(currentNodes => currentNodes.map(node => node.id === updatedNode.id ? updatedNode : node));
     }, [selectedNode, setSelectedNode, setNodes]);

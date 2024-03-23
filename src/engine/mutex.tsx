@@ -27,9 +27,22 @@ class Mutex {
     addActivity(activity: Activity) {
         if (!this.sortedActivities.some(a => a.id === activity.id)) {
             this.sortedActivities.push(activity);
-            console.log("pushed");
-            console.log(this.sortedActivities);
         }
+        this.sortActivitiesInMutex();
+        this.setMutexPriority();
+    }
+
+    updateActivityById(activityId: number, newActivity: Activity) {
+        const index = this.sortedActivities.findIndex(activity => activity.id === activityId);
+
+        if (index > -1) {
+            this.sortedActivities.splice(index, 1);
+            this.addActivity(newActivity);
+        }
+        this.recalculateMutexPriority();
+    }
+
+    recalculateMutexPriority() {
         this.sortActivitiesInMutex();
         this.setMutexPriority();
     }

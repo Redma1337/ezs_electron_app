@@ -13,7 +13,6 @@ export default memo(({ id, selected, data }: NodeProps<MutexNodeData>) => {
             <div>
                 <div className="p-2 flex justify-center">
                     <strong>{data.mutex.mutexName}</strong>
-                    <strong>{selected}</strong>
                 </div>
             </div>
             <Handle type="source" position={Position.Right} className="w-2 h-2"/>

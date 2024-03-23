@@ -30,11 +30,26 @@ class Graph {
         console.log(`Changed priority of Activity: ${activity.task} id ${activity.id} to new priority ${newPriority}`);
 
         activity.mutexes.forEach(mutex => {
-            mutex.sortActivitiesInMutex();
+            mutex.recalculateMutexPriority();
             console.log(`Recalculated priorities for Mutex: ${mutex.mutexName}`);
         });
     }
 
+    public changeTask(activityId: number, newTask: string) {
+        const activity = this.getActivityById(activityId);
+        if (!activity) {
+            console.error(`Activity with id ${activityId} not found`);
+            return;
+        }
+
+        activity.task = newTask;
+        console.log(`Changed name of Activity: id ${activity.id} to new name ${activity.task}`);
+
+        activity.mutexes.forEach(mutex => {
+            mutex.updateActivityById(activity.id, activity);
+            console.log(`Recalculated priorities for Mutex: ${mutex.mutexName}`);
+        });
+    }
 
     public removeActivity(activityToRemove: Activity) {
         const index = this.activities.findIndex(activity => activity.id === activityToRemove.id);
