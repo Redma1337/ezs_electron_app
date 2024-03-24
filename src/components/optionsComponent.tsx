@@ -78,8 +78,6 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
         const semaphoreExists = selectedNode.data.activity.outSemaphores.some((semaphore: { id: string }) => semaphore.id === semaphoreId);
 
         if (targetNode && !semaphoreExists) {
-            const connection = new Semaphore(false, semaphoreId, selectedNode.data.activity, targetNode.data.activity);
-            selectedNode.data.activity.outSemaphores.push(connection);
             dispatch({ type: 'connectActivities', payload: { sourceId: selectedNode.data.activity.id, targetId: targetNode.data.activity.id } });
             newEdge(semaphoreId, selectedNode.id, targetId);
         } else {
@@ -109,21 +107,18 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
         const targetNode = nodes.find(node => node.data.activity.id === targetActivity.id);
         const updatedSemaphores = selectedNode.data.activity.outSemaphores.filter((semaphore: { id: string }) => semaphore.id !== semaphoreId);
 
-        selectedNode.data.activity.outSemaphores = updatedSemaphores;
         removeEdge(selectedNode.id, targetNode.id);
         dispatch({ type: 'disconnectActivities', payload: { sourceId: selectedNode.data.activity.id, targetId: targetNode.data.activity.id, semaphoreToRemove: semaphoreToRemove } });
     };
 
     const toggleSemaphore = (semaphoreId: string) => {
         const semaphoreToToggle = selectedNode.data.activity.outSemaphores.find((semaphore: { id: string }) => semaphore.id === semaphoreId);
-        semaphoreToToggle.isActive() ? semaphoreToToggle.off() : semaphoreToToggle.on();
         dispatch({ type: 'toggleSemaphore', payload: { semaphoreId: semaphoreId } });
         setToggleRefresh(prev => !prev); // force rerender
     }
 
     const deleteMutex = (mutexId: number) => {
         const mutexToRemove = selectedNode.data.activity.mutexes.find((mutex: { id: number }) => mutex.id === mutexId);
-        selectedNode.data.activity.removeMutex(mutexToRemove);
         removeEdge(selectedNode.id, mutexId.toString());
         dispatch({ type: 'disconnectMutexFromActivity', payload: { activityId: selectedNode.data.activity.id, mutexName: mutexToRemove.mutexName } });
     };
@@ -189,41 +184,25 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
 
     const walkAndUpdate = async () => {
         await dispatch({ type: 'walk' });
-        const validActivities: Activity[] = state.validNodes;
-
-        const semaphoreMapping = new Map();
-        validActivities.forEach(activity => {
-            activity.outSemaphores.forEach(semaphore => semaphoreMapping.set(semaphore.id, semaphore));
-            activity.inSemaphores.forEach(semaphore => semaphoreMapping.set(semaphore.id, semaphore));
-        });
-
-        const updatedNodes = nodes.map(node => {
-            if (node.data && node.data.activity) {
-                const clonedActivity = new Activity(
-                    node.data.activity.id,
-                    node.data.activity.task,
-                    node.data.activity.priority
-                );
-
-                clonedActivity.outSemaphores = node.data.activity.outSemaphores.map((semaphore: { id: any; }) => semaphoreMapping.get(semaphore.id) || semaphore);
-                clonedActivity.inSemaphores = node.data.activity.inSemaphores.map((semaphore: { id: any; }) => semaphoreMapping.get(semaphore.id) || semaphore);
-
-                return {
-                    ...node,
-                    data: { ...node.data, activity: clonedActivity }
-                };
-            }
-
-            return node;
-        });
-
-        setNodes(updatedNodes);
     };
 
     useEffect(() => {
         removeInvalidSemaphores();
         removeInvalidMutexConnections();
     }, [nodes.length]);
+
+    useEffect(() => {
+        console.log("useEffect ---------------");
+        state.graph.activities?.forEach((activity: Activity) => {
+            nodes.forEach((node: Node) => {
+                console.log(node.data.activity?.id);
+                if (node.id === activity.id.toString()) {
+                    node.data.activity = activity;
+                    console.log("updated");
+                }
+            })
+        })
+    }, [state]);
 
     return (
         <div className="w-[300px] flex flex-col justify-between">

@@ -5,54 +5,55 @@ import { act } from "react-dom/test-utils";
 
 //centralize the state management to this function to keep it all in place
 //don't use es6 function syntax, otherwise function won't be hoisted
-function graphReducer(graph: Graph, action: any) {
+function graphReducer(state: any, action: any) {
     var sourceId, targetId;
+    const { graph, version } = state;
     //TODO: add the missing action types and implement their logic
     switch (action.type) {
         case 'addActivity':
             const newActivity = new Activity(action.payload.id, action.payload.task, action.payload.priority);
             graph.addActivity(newActivity);
-            return graph;
+            return { graph: graph, version: version + 1 };
 
         case 'removeActivity':
             const activityToRemove = action.payload.activityToRemove;
             graph.removeActivity(activityToRemove);
             graph.removeInvalidSemaphores();
-            return graph;
+            return { graph: graph, version: version + 1 };
 
         case 'changePriority': {
             const { activityId, priority } = action.payload;
             graph.changePriority(activityId, priority);
-            return graph;
+            return { graph: graph, version: version + 1 };
         }
 
         case 'changeTask': {
             const { activityId, task } = action.payload;
             graph.changeTask(activityId, task);
-            return graph;
+            return { graph: graph, version: version + 1 };
         }
 
         case 'addMutex':
             const { id, mutexName } = action.payload;
             graph.addMutex(id, mutexName);
-            return graph;
+            return { graph: graph, version: version + 1 };
 
         case 'addMutex': { 
             const { id, mutexName } = action.payload;
             graph.addMutex(id, mutexName);
-            return graph;
+            return { graph: graph, version: version + 1 };
         }
 
         case 'addMutexToActivity': {
             const { activityId, mutexName } = action.payload;
             graph.connectToMutex(activityId, mutexName);
-            return graph;
+            return { graph: graph, version: version + 1 };
         }
 
         case 'disconnectMutexFromActivity': {
             const { activityId, mutexName } = action.payload;
             graph.disconnectFromMutex(activityId, mutexName);
-            return graph;
+            return { graph: graph, version: version + 1 };
         }
 
         case 'initializeGraph':
@@ -91,28 +92,28 @@ function graphReducer(graph: Graph, action: any) {
             graph.connectToMutex(3, "m34");
             graph.connectToMutex(4, "m34");
 
-            return graph;
+            return { graph: graph, version: version + 1 };
 
         case 'connectActivities':
             sourceId = action.payload.sourceId;
             targetId = action.payload.targetId;
             graph.connectActivities(sourceId, targetId, false);
-            return graph;
+            return { graph: graph, version: version + 1 };
 
         case 'toggleSemaphore':
             const semaphoreId = action.payload.semaphoreId;
             graph.toggleSemaphore(semaphoreId);
-            return graph;
+            return { graph: graph, version: version + 1 };
 
         case 'print':
             graph.print();
             graph.printSemaphores();
             graph.seeAssignedMutexes();
-            return graph;
+            return { graph: graph, version: version + 1 };
 
         case 'walk':
             graph.walk();
-            return graph;
+            return { graph: graph, version: version + 1 };
 
         default:
             return graph;

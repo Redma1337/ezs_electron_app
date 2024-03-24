@@ -7,7 +7,7 @@ import { Edge } from 'reactflow';
 
 // Define the type of the context
 interface GraphContextType {
-    state: Graph;
+    state: any;
     dispatch: Dispatch<any>;
     edges?: Edge[]; 
     setEdges?: React.Dispatch<React.SetStateAction<Edge[]>>;
@@ -22,7 +22,7 @@ interface GraphProviderProps {
 
 // Define a provider component with the corrected type
 export const GraphProvider: React.FC<GraphProviderProps> = ({ children }) => {
-    const [state, dispatch] = React.useReducer(graphReducer, new Graph());
+    const [state, dispatch] = React.useReducer(graphReducer, { graph: new Graph(), version: 0 });
 
     return (
         <GraphContext.Provider value={{ state, dispatch }}>
