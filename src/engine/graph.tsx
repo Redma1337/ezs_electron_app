@@ -7,10 +7,12 @@ class Graph {
     public readonly activities: Activity[];
     public readonly mutexes: Mutex[];
     public mutexHandler: MutexHandler;
+    public validNodes: Activity[];
 
     constructor() {
         this.activities = [];
         this.mutexes = [];
+        this.validNodes = [];
         this.mutexHandler = new MutexHandler();
     }
 
@@ -52,6 +54,7 @@ class Graph {
     }
 
     public removeActivity(activityToRemove: Activity) {
+        // TODO: remove activity from all mutexes
         const index = this.activities.findIndex(activity => activity.id === activityToRemove.id);
         if (index > -1) {
             this.activities.splice(index, 1);
@@ -85,6 +88,8 @@ class Graph {
         console.log(`Added Mutex: ${mutexName} id ${mutexId}`);
         return newMutex;
     }
+
+    // TODO: delete Mutex - in that function delete mutex from all activities
 
     public connectToMutex(activityId: number, mutexName: string) {
         let mutexToUpdate = this.getMutexByName(mutexName);
@@ -142,17 +147,9 @@ class Graph {
     }
 
     public toggleSemaphore(semaphoreId: string) {
-        // Search through all activities
-        console.log("toggle Semaphore")
         this.activities.forEach(activity => {
-            // Check in outSemaphores
-            console.log("toggle Semaphore foreach activity")
 
             activity.outSemaphores.forEach(semaphore => {
-                console.log("toggle Semaphore foreach activity foreach outSemaphore")
-                console.log(semaphore.id);
-                console.log(semaphoreId);
-
                 if (semaphore.id === semaphoreId) {
                     semaphore.isActive() ? semaphore.off() : semaphore.on();
                     console.log(`Toggled Semaphore: ${semaphoreId} to ${semaphore.isActive()}`);
@@ -211,12 +208,12 @@ class Graph {
 
     walk() {
         // Search for nodes that have only active input semaphores
-        let validNodes = this.activities.filter(activity => activity.isValid()); // bruach ich hier nicht mehr? eiegntlich 
+        this.validNodes = this.activities.filter(activity => activity.isValid()); // bruach ich hier nicht mehr? eiegntlich 
 
-        // sort and filter nodes by mutex priority 
-        validNodes = this.mutexHandler.handleMutexe(validNodes, this.mutexes);
+        // sort and filter nodes by mutex priority
+        this.validNodes = this.mutexHandler.handleMutexe(this.validNodes, this.mutexes);
 
-        validNodes.forEach(activity => activity.trigger());
+        this.validNodes.forEach(activity => activity.trigger());
     }
 
     public print() {

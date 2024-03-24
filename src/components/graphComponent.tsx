@@ -76,6 +76,7 @@ const GraphComponent = () => {
                         type: 'removeMutex',
                         payload: { mutexToRemove }
                     });
+                    console.log("remove mutex called");
                 }
                 setSelectedNode(null);
             }
@@ -133,7 +134,6 @@ const GraphComponent = () => {
     );
 
     const updateSelectedNodeData = useCallback((key: string, value: any) => {
-        // TODO: Update priority in backend
         if (!selectedNode || !selectedNode.data.activity) return;
 
         const activity = selectedNode.data.activity;

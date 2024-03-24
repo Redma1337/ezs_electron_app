@@ -3,8 +3,8 @@ import Mutex from "./mutex";
 import { MutexStatus } from "./mutex";
 
 class Activity {
-    public readonly outSemaphores: Semaphore[];
-    public readonly inSemaphores: Semaphore[];
+    public outSemaphores: Semaphore[];
+    public inSemaphores: Semaphore[];
     public mutexes: Mutex[];
 
     constructor(
@@ -76,6 +76,9 @@ class Activity {
     }
 
     public isValid() {
+        if (this.inSemaphores.length === 0) {
+            return false; // Or any value you consider appropriate for an empty array
+        }
         return this.inSemaphores.every(semaphore => semaphore.isActive());
     }
 

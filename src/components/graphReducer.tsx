@@ -3,7 +3,6 @@ import Activity from "../engine/activity";
 import Semaphore from "../engine/semaphore";
 import { act } from "react-dom/test-utils";
 
-
 //centralize the state management to this function to keep it all in place
 //don't use es6 function syntax, otherwise function won't be hoisted
 function graphReducer(graph: Graph, action: any) {
@@ -37,6 +36,12 @@ function graphReducer(graph: Graph, action: any) {
             const { id, mutexName } = action.payload;
             graph.addMutex(id, mutexName);
             return graph;
+
+        case 'addMutex': { 
+            const { id, mutexName } = action.payload;
+            graph.addMutex(id, mutexName);
+            return graph;
+        }
 
         case 'addMutexToActivity': {
             const { activityId, mutexName } = action.payload;
@@ -103,6 +108,11 @@ function graphReducer(graph: Graph, action: any) {
             graph.print();
             graph.printSemaphores();
             graph.seeAssignedMutexes();
+            return graph;
+
+        case 'walk':
+            graph.walk();
+            return graph;
 
         default:
             return graph;

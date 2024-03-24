@@ -81,7 +81,7 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
             const connection = new Semaphore(false, semaphoreId, selectedNode.data.activity, targetNode.data.activity);
             selectedNode.data.activity.outSemaphores.push(connection);
             dispatch({ type: 'connectActivities', payload: { sourceId: selectedNode.data.activity.id, targetId: targetNode.data.activity.id } });
-            newEdge(selectedNode.id, targetId);
+            newEdge(semaphoreId, selectedNode.id, targetId);
         } else {
             console.log("Target node not found or semaphore already existing");
         }
@@ -99,7 +99,8 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
         dispatch({ type: 'addMutexToActivity', payload: { activityId: selectedNode.data.activity.id, mutexName: mutexNode.data.mutex.mutexName } });
         selectedNode.data.activity.assignMutex(mutexNode.data.mutex);
         mutexNode.data.mutex.addActivity(selectedNode.data.activity);
-        newEdge(selectedNode.id, mutexId)
+        const edgeId = 's' + selectedNode.id + '-' + mutexNode.data.mutex.id;
+        newEdge(edgeId, selectedNode.id, mutexId)
     };
 
     const deleteSemaphore = (semaphoreId: string) => {
@@ -127,13 +128,13 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
         dispatch({ type: 'disconnectMutexFromActivity', payload: { activityId: selectedNode.data.activity.id, mutexName: mutexToRemove.mutexName } });
     };
 
-    const newEdge = (source: string, target: string) => {
+    const newEdge = (edgeId: string, source: string, target: string) => {
         setEdges((eds) =>
             nodes
                 .filter((node) => node.id === source || node.selected)
                 .reduce(
                     // @ts-ignore
-                    (eds, node) => addEdge({ source: node.id, target }, eds),
+                    (eds, node) => addEdge({ id: edgeId, source: node.id, target }, eds),
                     eds,
                 ),
         );
@@ -186,12 +187,43 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
         });
     };
 
+    const walkAndUpdate = async () => {
+        await dispatch({ type: 'walk' });
+        const validActivities: Activity[] = state.validNodes;
+
+        const semaphoreMapping = new Map();
+        validActivities.forEach(activity => {
+            activity.outSemaphores.forEach(semaphore => semaphoreMapping.set(semaphore.id, semaphore));
+            activity.inSemaphores.forEach(semaphore => semaphoreMapping.set(semaphore.id, semaphore));
+        });
+
+        const updatedNodes = nodes.map(node => {
+            if (node.data && node.data.activity) {
+                const clonedActivity = new Activity(
+                    node.data.activity.id,
+                    node.data.activity.task,
+                    node.data.activity.priority
+                );
+
+                clonedActivity.outSemaphores = node.data.activity.outSemaphores.map((semaphore: { id: any; }) => semaphoreMapping.get(semaphore.id) || semaphore);
+                clonedActivity.inSemaphores = node.data.activity.inSemaphores.map((semaphore: { id: any; }) => semaphoreMapping.get(semaphore.id) || semaphore);
+
+                return {
+                    ...node,
+                    data: { ...node.data, activity: clonedActivity }
+                };
+            }
+
+            return node;
+        });
+
+        setNodes(updatedNodes);
+    };
+
     useEffect(() => {
         removeInvalidSemaphores();
         removeInvalidMutexConnections();
     }, [nodes.length]);
-
-
 
     return (
         <div className="w-[300px] flex flex-col justify-between">
@@ -342,6 +374,10 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
                                 onClick={() => dispatch({type: 'print'})}
                                 className="text-white bg-blue-700 p-2 px-4 rounded shadow"
                             >Print Graph</button>
+                            <button
+                                onClick={() => walkAndUpdate()}
+                                className="text-white bg-blue-700 p-2 px-4 rounded shadow"
+                            >Walk</button>
                         </div>
                     </div>
             }
