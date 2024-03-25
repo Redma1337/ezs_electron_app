@@ -23,8 +23,8 @@ import { Simulate, act } from "react-dom/test-utils";
 import select = Simulate.select;
 import acitvityNode from "./flowgraph/acitvityNode";
 import activity from "../engine/activity";
-import { GraphContext } from './graphContext';
-import { useGraph } from './graphContext';
+import { GraphContext } from '../store/graphContext';
+import { useGraph } from '../store/graphContext';
 import SplitEdgeNode from "./flowgraph/components/orNode";
 import { FileHandler } from '../engine/fileHandler'; 
 import Semaphore from '../engine/semaphore';
@@ -58,6 +58,48 @@ const GraphComponent = () => {
     const [selectedNode, setSelectedNode] = useState<Node>(null);
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const { state, dispatch } = useGraph();
+
+    useEffect(() => {
+        console.log("graph state update");
+        state.graph.activities.forEach(activity => {
+            const existingNode = nodes.find(node => node.id === activity.id.toString());
+
+            if (existingNode) {
+                existingNode.data = { activity: activity };
+            } else {
+                const aNode = {
+                    id: activity.id.toString(),
+                    type: "activity",
+                    position: { x: 100, y: 100},
+                    data: { activity: activity },
+                };
+
+                setNodes((nds) => nds.concat(aNode));
+            }
+
+
+            activity.outSemaphores.forEach(semaphore => {
+                const existingEdge = edges.find(edge => edge.id === semaphore.id);
+
+                if (!existingEdge) {
+                    newEdge(semaphore.id, semaphore.sourceActivity.id.toString(), semaphore.targetActivity.id.toString());
+                }
+            })
+        })
+
+    }, [state]);
+
+    const newEdge = (edgeId: string, source: string, target: string) => {
+        console.log(source, target)
+        setEdges((eds) =>
+            nodes
+                .filter((node) => node.id === source || node.selected)
+                .reduce(
+                    (eds, node) => addEdge({ id: edgeId, source: node.id, target: target }, eds),
+                    eds,
+                ),
+        );
+    }
 
     const handleNodesChange = useCallback((changes: any) => {
         changes.forEach((change: any) => {
@@ -95,8 +137,7 @@ const GraphComponent = () => {
         event.dataTransfer.dropEffect = 'move';
     }, []);
 
-    const onDrop = useCallback(
-        (event: DragEvent) => {
+    const onDrop = useCallback((event: DragEvent) => {
             event.preventDefault();
 
             const type = event.dataTransfer.getData('application/reactflow');
@@ -104,10 +145,12 @@ const GraphComponent = () => {
             if (typeof type === 'undefined' || !type) {
                 return;
             }
+
             const position = reactFlowInstance.screenToFlowPosition({
                 x: event.clientX,
                 y: event.clientY,
             });
+
             const nodeId = Math.floor(Math.random() * 10000);
             var newNode: any;
             if (type === 'activity') {
@@ -136,6 +179,7 @@ const GraphComponent = () => {
     const updateSelectedNodeData = useCallback((key: string, value: any) => {
         if (!selectedNode || !selectedNode.data.activity) return;
 
+        /*
         const activity = selectedNode.data.activity;
         const updatedActivity = new Activity(
             activity.id,
@@ -171,16 +215,16 @@ const GraphComponent = () => {
         }
         setSelectedNode(updatedNode);
         setNodes(currentNodes => currentNodes.map(node => node.id === updatedNode.id ? updatedNode : node));
+        */
     }, [selectedNode, setSelectedNode, setNodes]);
 
     return (
         <div className="w-full h-full flex shadow">
             <ReactFlowProvider>
-                <GraphContext.Provider value={{ state, dispatch, edges, setEdges }}>
+                <GraphContext.Provider value={{ state, dispatch }}>
                     <OptionsComponent
                         selectedNode={selectedNode}
                         nodes={nodes}
-                        setNodes={setNodes}
                         onUpdateNode={updateSelectedNodeData}
                     />
                     <ReactFlow

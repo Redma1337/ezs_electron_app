@@ -8,7 +8,7 @@ type MutexNodeData = {
 
 const connectionNodeIdSelector = (state: ReactFlowState) => state.connectionNodeId;
 
-export default memo(({ id, selected, data }: NodeProps<MutexNodeData>) => {
+export default memo(({ id, selected, xPos, yPos, data }: NodeProps<MutexNodeData>) => {
     const connectionNodeId = useStore(connectionNodeIdSelector);
 
     const isConnecting = !!connectionNodeId;
@@ -34,6 +34,7 @@ export default memo(({ id, selected, data }: NodeProps<MutexNodeData>) => {
                     Priority: {data.activity.priority}<br/>
                     Selected: {JSON.stringify(selected)}<br/>
                     IsTarget: {JSON.stringify(isTarget)}<br/>
+                    Pos: {xPos + "," + yPos}<br/>
                     IsConnected: {JSON.stringify(isConnecting)}<br/>
                 </div>
             </div>

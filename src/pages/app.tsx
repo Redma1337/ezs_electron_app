@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GraphProvider } from '../components/graphContext';
+import { GraphProvider } from '../store/graphContext';
 import GraphComponent from "../components/graphComponent";
 
 

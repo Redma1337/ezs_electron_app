@@ -6,11 +6,10 @@ class Activity {
     public outSemaphores: Semaphore[];
     public inSemaphores: Semaphore[];
     public mutexes: Mutex[];
-
     constructor(
         public readonly id: number,
         public task: string,
-        public priority: number,
+        public priority: number
     ) {
         this.outSemaphores = [];
         this.inSemaphores = [];

@@ -1,24 +1,18 @@
 import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { Node, NodeTypes, addEdge, useEdges, OnNodesChange } from "reactflow";
-import Activity from "../engine/activity";
-import { GraphContext } from './graphContext';
 import Semaphore from '../engine/semaphore';
-import { connect } from 'net';
 import { FileHandler } from '../engine/fileHandler';
-import { useGraph } from './graphContext';
+import { useGraph } from '../store/graphContext';
 import Mutex from '../engine/mutex';
 
 type OptionsComponentProps = {
     selectedNode: Node
     nodes: Node[]
-    setNodes: React.Dispatch<React.SetStateAction<Node<any, string>[]>>
     onUpdateNode: any
 }
 
-const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: OptionsComponentProps) => {
-
+const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponentProps) => {
     const { state, dispatch } = useGraph();
-    const { setEdges } = useGraph();
     const [selectedOutSemaphore, setSelectedOutSemaphore] = useState('');
     const [selectedMutex, setSelectedMutex] = useState('');
     const [toggleRefresh, setToggleRefresh] = useState(false);
@@ -34,6 +28,7 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
     // usefilepicker
     const { openFilePicker, parsedData } = FileHandler();
 
+    /*
     const handleAddActivity = (newActivityTask: string) => {
         const nodeId = Math.floor(Math.random() * 10000);
         const newNode: Node = {
@@ -61,10 +56,12 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
     useEffect(() => {
         handleFileContent();
     }, [parsedData]);
+    */
 
     const onDragStart = (event: React.DragEvent, nodeType: string) => {
         event.dataTransfer.setData('application/reactflow', nodeType);
         event.dataTransfer.effectAllowed = 'move';
+        console.log("test")
     };
 
     const addSemaphore = (targetId: string): void => {
@@ -124,6 +121,7 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
     };
 
     const newEdge = (edgeId: string, source: string, target: string) => {
+        /*
         setEdges((eds) =>
             nodes
                 .filter((node) => node.id === source || node.selected)
@@ -133,13 +131,16 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
                     eds,
                 ),
         );
+        */
     }
 
     const removeEdge = (source: string, target: string) => {
+        /*
         setEdges((currentEdges) =>
             currentEdges.filter((edge) => !(edge.source === source && edge.target === target))
         );
         console.log("removed edge from " + source + "to" + target);
+        */
     };
 
     const removeInvalidSemaphores = () => {
@@ -190,19 +191,6 @@ const OptionsComponent = ({ selectedNode, nodes, setNodes, onUpdateNode }: Optio
         removeInvalidSemaphores();
         removeInvalidMutexConnections();
     }, [nodes.length]);
-
-    useEffect(() => {
-        console.log("useEffect ---------------");
-        state.graph.activities?.forEach((activity: Activity) => {
-            nodes.forEach((node: Node) => {
-                console.log(node.data.activity?.id);
-                if (node.id === activity.id.toString()) {
-                    node.data.activity = activity;
-                    console.log("updated");
-                }
-            })
-        })
-    }, [state]);
 
     return (
         <div className="w-[300px] flex flex-col justify-between">
