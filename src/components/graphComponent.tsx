@@ -205,7 +205,7 @@ const GraphComponent = () => {
                     id: nodeId.toString(),
                     type,
                     position,
-                    data: { activity: new Activity(nodeId, "empty Node", 0), label: `${type} node` },
+                    data: { activity: new Activity(nodeId, "empty Node", 0, 1), label: `${type} node` },
                 };
                 dispatch({ type: 'addActivity', payload: { id: nodeId, task: "emptyNode", priority: 0 } })
             } else if (type === 'mutex') {

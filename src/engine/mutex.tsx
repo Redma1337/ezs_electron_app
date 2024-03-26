@@ -45,6 +45,7 @@ class Mutex {
 
     private sortActivitiesInMutex() {
         this.sortedActivities.sort((a, b) => b.getPriority() - a.getPriority());
+        console.log('sorted Activities: ',this.sortedActivities)
     }
 
     updateActivityById(activityId: number, newActivity: Activity) {

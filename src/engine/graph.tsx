@@ -228,7 +228,7 @@ class Graph {
         // sort and filter nodes by mutex priority
         this.validNodes = this.mutexHandler.handleMutexe(this.validNodes, this.mutexes);
 
-        this.validNodes.forEach(activity => activity.trigger());
+        //this.validNodes.forEach(activity => activity.trigger());
         // this.activities.forEach(activity => {
         //     console.log("Activity: ", activity.task, " - blocked Mutexes: ", activity.blockedMutexes)
         // });
