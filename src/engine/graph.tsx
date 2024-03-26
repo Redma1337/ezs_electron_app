@@ -72,6 +72,10 @@ class Graph {
         return this.mutexes.find(mutex => mutex.mutexName === mutexName);
     }
 
+    private getMutexById(mutexId: number): Mutex | undefined {
+        return this.mutexes.find(mutex => mutex.getId() === mutexId);
+    }
+
     private getPriorityById(activityId: number): number | undefined {
         const activity = this.getActivityById(activityId);
         return activity.getPriority();
@@ -91,6 +95,19 @@ class Graph {
 
     // TODO: delete Mutex - in that function delete mutex from all activities
 
+    public removeMutex(mutexName: number) {
+        console.log("Mutex Name: ", mutexName);
+        let mutexToRemove = this.getMutexById(mutexName);
+        console.log("Mutex to remove: ", mutexToRemove);
+        // remove mutex from all activities
+        mutexToRemove.sortedActivities.forEach(activity => {
+            this.disconnectFromMutex(activity.id, mutexToRemove.mutexName);
+        });
+        //remove mutex from mutexes
+        this.mutexes.splice(this.mutexes.indexOf(mutexToRemove), 1);
+        console.log(`Removed Mutex '${mutexName}'.`);
+    }
+
     public connectToMutex(activityId: number, mutexName: string) {
         let mutexToUpdate = this.getMutexByName(mutexName);
 
@@ -103,8 +120,11 @@ class Graph {
         let activity = this.getActivityById(activityId);
         let priority = this.getPriorityById(activityId);
 
-        mutexToUpdate.addActivity(activity);
         activity.assignMutex(mutexToUpdate);
+        mutexToUpdate.addActivity(activity);
+
+        //pcp:
+        mutexToUpdate.setPcpPriority(this.activities); // hier weil muss alle Activities kennen um Prio zu setzen
 
         console.log(`Added Activity ID ${activityId} to Mutex '${mutexName}' priority ${priority}.`);
 
@@ -112,15 +132,14 @@ class Graph {
     }
 
     public disconnectFromMutex(activityId: number, mutexName: string) { //TODO
-        console.log(mutexName);
+        let activityToRemove = this.getActivityById(activityId);
         let mutexToUpdate = this.getMutexByName(mutexName);
-        console.log(mutexToUpdate);
-        let activity = this.getActivityById(activityId);
-        activity.removeMutex(mutexToUpdate);
+
+        activityToRemove.removeMutex(mutexToUpdate);
         mutexToUpdate.removeActivityId(activityId);
 
-        console.log(`Disconnected Activity ID ${activityId} from Mutex '${mutexName}'.`);
-        return;
+        //TODO: //pcp:
+        mutexToUpdate.setPcpPriority(this.activities);
     }
 
     // maybe connectActivities
@@ -143,7 +162,6 @@ class Graph {
 
         sourceActivity.addOutSemaphore(connection);
         targetActivity.addInSemaphore(connection);
-        console.log(`Added connection between activity with id: ${sourceActivityId} and ${targetActivityId}.`);
     }
 
     public toggleSemaphore(semaphoreId: string) {
@@ -205,12 +223,33 @@ class Graph {
 
     walk() {
         // Search for nodes that have only active input semaphores
-        this.validNodes = this.activities.filter(activity => activity.isValid()); // bruach ich hier nicht mehr? eiegntlich 
+        this.validNodes = this.activities.filter(activity => activity.isValid()); // bruach ich hier nicht mehr? eiegntlich
 
         // sort and filter nodes by mutex priority
         this.validNodes = this.mutexHandler.handleMutexe(this.validNodes, this.mutexes);
 
         this.validNodes.forEach(activity => activity.trigger());
+        // this.activities.forEach(activity => {
+        //     console.log("Activity: ", activity.task, " - blocked Mutexes: ", activity.blockedMutexes)
+        // });
+
+        // trigger valid nodes if work done
+        this.validNodes.forEach(activity => {
+            console.log(`Activity ${activity.task} workload: ${activity.currentWorkload}/${activity.workload}`);
+            if (!activity.work()) {
+                activity.releaseLocks(); // release Mutexes
+                activity.trigger();
+            }
+        });
+
+        // release all mutexes that are not completely blocked
+        this.activities.forEach(activity => {
+            //console.log("Activity: ", activity.task, " - hasMutexBlocked: ", activity.hasMutexBlocked());
+            if (!activity.hasMutexBlocked()) {
+                //console.log("Released Mutexes: ", activity.blockedMutexes);
+                activity.releaseLocks();
+            }
+        });
     }
 
     public print() {

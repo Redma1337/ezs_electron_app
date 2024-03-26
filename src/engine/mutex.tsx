@@ -10,13 +10,15 @@ class Mutex {
     public readonly mutexName: string;
     public sortedActivities: Activity[];
     public status: MutexStatus;
-    private priority: number; 
+    private priority: number;
+    public maxPriorityCeiling: number;
 
     constructor(id: number, mutexName: string) {
         this.id = id;
         this.mutexName = mutexName;
         this.sortedActivities = [];
-        this.priority = 0; 
+        this.priority = 0;
+        this.maxPriorityCeiling = undefined;
         this.status = MutexStatus.Free;
     }
 
@@ -24,12 +26,25 @@ class Mutex {
         return this.id;
     }
 
-    addActivity(activity: Activity) {
+    public addActivity(activity: Activity) {
         if (!this.sortedActivities.some(a => a.id === activity.id)) {
             this.sortedActivities.push(activity);
         }
         this.sortActivitiesInMutex();
         this.setMutexPriority();
+
+        // PCP: set inherited priority
+        this.inheritPriority();
+    }
+
+    private inheritPriority() {
+        this.sortedActivities.forEach(activity => {
+            activity.inheritedPriority = activity.setInheritedPriority();
+        });
+    }
+
+    private sortActivitiesInMutex() {
+        this.sortedActivities.sort((a, b) => b.getPriority() - a.getPriority());
     }
 
     updateActivityById(activityId: number, newActivity: Activity) {
@@ -45,10 +60,6 @@ class Mutex {
     recalculateMutexPriority() {
         this.sortActivitiesInMutex();
         this.setMutexPriority();
-    }
-
-    sortActivitiesInMutex() {
-        this.sortedActivities.sort((a, b) => b.getPriority() - a.getPriority());
     }
 
     setMutexPriority() {
@@ -86,6 +97,26 @@ class Mutex {
 
         this.sortActivitiesInMutex();
         this.setMutexPriority();
+
+        // PCP: set inherited priority
+        this.inheritPriority();
+    }
+
+    //PCP
+    public setPcpPriority(activities: Activity[]) {
+        let maxPriorityCeiling = 0;
+        activities.forEach(activity => {
+            // ... größte Priorität (P2) der Tasks, die die Ressource (BM) nicht benutzen && die höhere Priorität haben als P1.
+            if ((activity.priority > maxPriorityCeiling) && (!this.sortedActivities.includes(activity)) && (activity.priority > this.getFirstPriority())) {
+                maxPriorityCeiling = activity.priority;
+            }
+        });
+        if (maxPriorityCeiling == 0) {
+            this.maxPriorityCeiling = Infinity;
+            return;
+        }
+        // Sie sollte aber kleiner sein als ...
+        this.maxPriorityCeiling = maxPriorityCeiling - 1;
     }
 }
 
