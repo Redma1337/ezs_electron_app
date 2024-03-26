@@ -28,6 +28,8 @@ import { useGraph } from '../store/graphContext';
 import SplitEdgeNode from "./flowgraph/components/orNode";
 import { FileHandler } from '../engine/fileHandler'; 
 import Semaphore from '../engine/semaphore';
+import mutex from "../engine/mutex";
+import semaphore from "../engine/semaphore";
 
 const nodeTypes: NodeTypes = {
     activity: ActivityNode,
@@ -47,9 +49,9 @@ const defaultEdgeOptions = {
         type: MarkerType.Arrow,
         width: 20,
         height: 20,
-        color: "black"
+        color: "red",
     },
-    type: "floating"
+    type: "floating",
 }
 
 const GraphComponent = () => {
@@ -61,41 +63,86 @@ const GraphComponent = () => {
 
     useEffect(() => {
         console.log("graph state update");
-        state.graph.activities.forEach(activity => {
-            const existingNode = nodes.find(node => node.id === activity.id.toString());
 
+        const backendNodeIds = new Set();
+        const backendEdgeIds = new Set();
+
+        state.graph.activities.forEach(activity => {
+            backendNodeIds.add(activity.id.toString()); // Track backend node IDs
+
+            const existingNode = nodes.find(node => node.id === activity.id.toString());
             if (existingNode) {
                 existingNode.data = { activity: activity };
             } else {
                 const aNode = {
                     id: activity.id.toString(),
                     type: "activity",
-                    position: { x: 100, y: 100},
+                    position: { x: 100, y: 100 },
                     data: { activity: activity },
                 };
-
                 setNodes((nds) => nds.concat(aNode));
             }
 
-
             activity.outSemaphores.forEach(semaphore => {
+                backendEdgeIds.add(semaphore.id); // Track backend edge IDs
                 const existingEdge = edges.find(edge => edge.id === semaphore.id);
-
                 if (!existingEdge) {
-                    newEdge(semaphore.id, semaphore.sourceActivity.id.toString(), semaphore.targetActivity.id.toString());
-                }
-            })
-        })
+                    newEdge(semaphore.id, semaphore.sourceActivity.id.toString(), semaphore.targetActivity.id.toString(), false);
+                } else {
+                    const activeState = semaphore.isActive();
+                    existingEdge.data.isActive = activeState;
 
+                    existingEdge.markerEnd = {
+                        type: MarkerType.Arrow,
+                        width: 20,
+                        height: 20,
+                        color: activeState ? "green" : "red",
+                    }
+
+                }
+            });
+
+            activity.mutexes.forEach(mutex => {
+                const edgeId = 'e' + activity.id + '-' + mutex.getId().toString();
+                backendEdgeIds.add(edgeId); // Track backend edge IDs
+                const existingEdge = edges.find(edge => edge.id === edgeId);
+                if (!existingEdge) {
+                    newEdge(edgeId, activity.id.toString(), mutex.getId().toString(), true);
+                }
+            });
+        });
+
+        // Process mutex nodes
+        state.graph.mutexes.forEach(mutex => {
+            backendNodeIds.add(mutex.getId().toString()); // Track backend mutex node IDs
+
+            const existingNode = nodes.find(node => node.id === mutex.getId().toString());
+            if (!existingNode) {
+                const mNode = {
+                    id: mutex.getId().toString(),
+                    type: "mutex",
+                    position: { x: 100, y: 100 },
+                    data: { mutex },
+                };
+                setNodes((nds) => nds.concat(mNode));
+            }
+            // Note: If mutex nodes can have edges, add processing here
+        });
+
+        // Remove nodes not in the backend state
+        setNodes((currentNodes) => currentNodes.filter(node => backendNodeIds.has(node.id)));
+
+        // Remove edges not in the backend state
+        setEdges((currentEdges) => currentEdges.filter(edge => backendEdgeIds.has(edge.id)));
     }, [state]);
 
-    const newEdge = (edgeId: string, source: string, target: string) => {
+    const newEdge = (edgeId: string, source: string, target: string, isAnimated: boolean) => {
         console.log(source, target)
         setEdges((eds) =>
             nodes
                 .filter((node) => node.id === source || node.selected)
                 .reduce(
-                    (eds, node) => addEdge({ id: edgeId, source: node.id, target: target }, eds),
+                    (eds, node) => addEdge({ id: edgeId, source: node.id, target: target, data: {isActive: false}, animated: isAnimated }, eds),
                     eds,
                 ),
         );
@@ -176,9 +223,8 @@ const GraphComponent = () => {
         [reactFlowInstance],
     );
 
-    const updateSelectedNodeData = useCallback((key: string, value: any) => {
+    const updateSelectedNodeData = useCallback((action: string, activityId: string, value: any) => {
         if (!selectedNode || !selectedNode.data.activity) return;
-
         /*
         const activity = selectedNode.data.activity;
         const updatedActivity = new Activity(

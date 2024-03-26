@@ -1,8 +1,13 @@
 import React, {memo, useCallback} from 'react';
 import {BaseEdge, EdgeProps, ReactFlowState, useStore} from 'reactflow';
 import {getBetterFloatingStraightPath} from "../../../utils/mathUtils";
+import Activity from "../../../engine/activity";
 
-const FloatingEdge = memo(({id, source, target, markerEnd, style }: EdgeProps) => {
+type FloatingEdgeData = {
+    isActive: boolean;
+}
+
+const FloatingEdge = memo(({id, source, target, markerEnd, style, data }: EdgeProps<FloatingEdgeData>) => {
     const sourceNode = useStore(useCallback((store) => store.nodeInternals.get(source), [source]));
     const targetNode = useStore(useCallback((store) => store.nodeInternals.get(target), [target]));
 
@@ -19,6 +24,8 @@ const FloatingEdge = memo(({id, source, target, markerEnd, style }: EdgeProps) =
 
     const { path, parallelPath } = getBetterFloatingStraightPath(targetNode, sourceNode, true, 20);
 
+    const edgeColor = data.isActive ? 'green' : 'red';
+
     return (
         <>
             {
@@ -27,14 +34,14 @@ const FloatingEdge = memo(({id, source, target, markerEnd, style }: EdgeProps) =
                         id={id}
                         path={path}
                         markerEnd={markerEnd}
-                        style={style}
+                        style={{ ...style, stroke: edgeColor }}
                     />
                 :
                     <BaseEdge
                         id={id}
                         path={parallelPath}
                         markerEnd={markerEnd}
-                        style={style}
+                        style={{ ...style, stroke: edgeColor }}
                     />
             }
         </>

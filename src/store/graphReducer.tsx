@@ -55,6 +55,12 @@ function graphReducer(state: any, action: any) {
             break;
         }
 
+        case 'disconnectActivities': {
+            const { sourceActivityId, targetActivityId, semaphoreIdToRemove} = action.payload;
+            graph.disconnectActivities(sourceActivityId, targetActivityId, semaphoreIdToRemove);
+            break;
+        }
+
         case 'toggleSemaphore': {
             const semaphoreId = action.payload.semaphoreId;
             graph.toggleSemaphore(semaphoreId);

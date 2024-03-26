@@ -1,6 +1,7 @@
 import Semaphore from "./semaphore";
 import Mutex from "./mutex";
 import { MutexStatus } from "./mutex";
+import semaphore from "./semaphore";
 
 class Activity {
     public outSemaphores: Semaphore[];

@@ -177,12 +177,9 @@ class Graph {
             console.error("Activity not found");
             return;
         }
-        if (!(sourceActivity == undefined)) {
-            sourceActivity.removeOutSemaphore(semaphoreIdToRemove);
-        }
-        if (!(targetActivity == undefined)) {
-            targetActivity.removeInSemaphore(semaphoreIdToRemove);
-        }
+
+        sourceActivity.removeOutSemaphore(semaphoreIdToRemove);
+        targetActivity.removeInSemaphore(semaphoreIdToRemove);
 
         console.log(`disconnected activity with id: ${sourceActivityId} and ${targetActivityId}.`);
     }

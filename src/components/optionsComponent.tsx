@@ -101,11 +101,10 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
     const deleteSemaphore = (semaphoreId: string) => {
         const semaphoreToRemove = selectedNode.data.activity.outSemaphores.find((semaphore: { id: string }) => semaphore.id === semaphoreId);
         const targetActivity = semaphoreToRemove.targetActivity;
-        const targetNode = nodes.find(node => node.data.activity.id === targetActivity.id);
-        const updatedSemaphores = selectedNode.data.activity.outSemaphores.filter((semaphore: { id: string }) => semaphore.id !== semaphoreId);
+        const targetNode = nodes.find(node => node.data.activity?.id === targetActivity.id);
 
         removeEdge(selectedNode.id, targetNode.id);
-        dispatch({ type: 'disconnectActivities', payload: { sourceId: selectedNode.data.activity.id, targetId: targetNode.data.activity.id, semaphoreToRemove: semaphoreToRemove } });
+        dispatch({ type: 'disconnectActivities', payload: { sourceActivityId: selectedNode.data.activity.id, targetActivityId: targetNode.data.activity.id, semaphoreIdToRemove: semaphoreToRemove.id } });
     };
 
     const toggleSemaphore = (semaphoreId: string) => {
@@ -229,7 +228,7 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                     type="text"
                                     placeholder="task"
                                     value={selectedNode.data.activity?.task}
-                                    onChange={e => onUpdateNode('task', e.target.value)}
+                                    onChange={e => dispatch({type: 'changeTask', payload: {activityId: selectedNode.data.activity?.id, task: e.target.value}})}
                                 />
                             </div>
                             <div>
@@ -239,7 +238,7 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                     type="text"
                                     placeholder="priority"
                                     value={selectedNode.data.activity?.priority}
-                                    onChange={e => onUpdateNode('priority', e.target.value)}
+                                    onChange={e => dispatch({type: 'changePriority', payload: {activityId: selectedNode.data.activity?.id, priority: e.target.value}})}
                                 />
                             </div>
                             <div>
