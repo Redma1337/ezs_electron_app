@@ -213,9 +213,9 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                 className="text-white bg-blue-700 p-2 px-4 rounded shadow"
                             >Select files</button>
                             <button
-                                onClick={() => dispatch({ type: 'print' })}
+                                onClick={() => walkAndUpdate()}
                                 className="text-white bg-blue-700 p-2 px-4 rounded shadow"
-                            >Print Graph</button>
+                            >Walk</button>
                         </div>
                     </div>
                     :
@@ -323,6 +323,19 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                         </div>
 
                         <div className="flex flex-col p-5 gap-5 border-t border-slate-200">
+                            <h2 className="font-semibold">General Settings</h2>
+                            <div>
+                                <h2 className="font-semibold">Simultaneous Tasks</h2>
+                                <input
+                                    className="px-2 p-1 rounded shadow border border-slate-200 w-full"
+                                    type="text"
+                                    placeholder="simultaneousTasks"
+                                    value={state.graph.mutexHandler.simultaneousTasks}
+                                    onChange={e => dispatch({ type: 'changeSimultaneousTasks', payload: { simultaneousTasks: e.target.value } })}
+                                />
+                            </div>
+                        </div>
+                        <div className="flex flex-col p-5 gap-5 border-t border-slate-200">
                             <h2 className="font-semibold">Components</h2>
                             <div className="px-2 p-1 rounded shadow border border-red-200 text-center"
                                 onDragStart={(event) => onDragStart(event, 'mutex')} draggable>
@@ -336,10 +349,6 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                 onClick={() => openFilePicker()}
                                 className="text-white bg-blue-700 p-2 px-4 rounded shadow"
                             >Select files</button>
-                            <button
-                                onClick={() => dispatch({type: 'print'})}
-                                className="text-white bg-blue-700 p-2 px-4 rounded shadow"
-                            >Print Graph</button>
                             <button
                                 onClick={() => walkAndUpdate()}
                                 className="text-white bg-blue-700 p-2 px-4 rounded shadow"

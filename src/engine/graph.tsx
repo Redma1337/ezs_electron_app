@@ -53,6 +53,15 @@ class Graph {
         });
     }
 
+    public changeSimultaneousTasks(simultaneousTasks: number) {
+        if (!simultaneousTasks) {
+            console.error(`no input for simultaneousTasks`);
+            return;
+        }
+
+        this.mutexHandler.simultaneousTasks = simultaneousTasks;
+    }
+
     public removeActivity(activityToRemove: Activity) {
         // TODO: remove activity from all mutexes
         const index = this.activities.findIndex(activity => activity.id === activityToRemove.id);

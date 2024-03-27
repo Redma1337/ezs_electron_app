@@ -9,7 +9,7 @@ function graphReducer(state: any, action: any) {
     switch (action.type) {
         case 'addActivity':
             let { task, priority } = action.payload;
-            const newActivity = new Activity(action.payload.id, task, priority);
+            const newActivity = new Activity(action.payload.id, task, priority, 1);
             graph.addActivity(newActivity);
             break;
 
@@ -28,6 +28,12 @@ function graphReducer(state: any, action: any) {
         case 'changeTask': {
             const { activityId, task } = action.payload;
             graph.changeTask(activityId, task);
+            break;
+        }
+
+        case 'changeSimultaneousTasks': {
+            const simultaneousTasks = action.payload.simultaneousTasks;
+            graph.changeSimultaneousTasks(simultaneousTasks);
             break;
         }
 
