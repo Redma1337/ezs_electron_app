@@ -2,12 +2,17 @@ import Semaphore from "./semaphore";
 import Activity from "./activity";
 import Mutex from "./mutex";
 import MutexHandler from "./mutexHandler";
+import { c } from "vite/dist/node/types.d-FdqQ54oU";
 
 class Graph {
     public readonly activities: Activity[];
     public readonly mutexes: Mutex[];
     public mutexHandler: MutexHandler;
     public validNodes: Activity[];
+    private walkSpeed: number = 1000;
+    private autoWalking: boolean = false;
+    private walkingIntervalId: any; 
+
 
     constructor() {
         this.activities = [];
@@ -220,6 +225,8 @@ class Graph {
             })
         });
     }
+
+
 
     walk() {
         // Search for nodes that have only active input semaphores

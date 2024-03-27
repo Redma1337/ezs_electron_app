@@ -1,9 +1,11 @@
-import React, { useContext, useEffect, useState, useCallback } from 'react';
+import React, { useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { Node, NodeTypes, addEdge, useEdges, OnNodesChange } from "reactflow";
 import Semaphore from '../engine/semaphore';
 import { FileHandler } from '../engine/fileHandler';
 import { useGraph } from '../store/graphContext';
 import Mutex from '../engine/mutex';
+import { c } from 'vite/dist/node/types.d-FdqQ54oU';
+import { Slider } from "@material-tailwind/react";
 
 type OptionsComponentProps = {
     selectedNode: Node
@@ -16,14 +18,16 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
     const [selectedOutSemaphore, setSelectedOutSemaphore] = useState('');
     const [selectedMutex, setSelectedMutex] = useState('');
     const [toggleRefresh, setToggleRefresh] = useState(false);
+    const [isAutoWalk, setAutoWalk] = useState(false);
+    const [speed, setSpeed] = useState(1000); // 1s 
+    const walkingIntervalId = useRef<NodeJS.Timeout | null>(null);
+
 
     useEffect(() => {
-        setSelectedOutSemaphore('')
-    }, [selectedNode]);
-
-    useEffect(() => {
-        setSelectedMutex('')
-    }, [selectedNode]);
+        setSelectedOutSemaphore('');
+        setSelectedMutex('');
+    }, [selectedNode, isAutoWalk]);
+    
 
     // usefilepicker
     const { openFilePicker, parsedData } = FileHandler();
@@ -57,6 +61,9 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
         handleFileContent();
     }, [parsedData]);
     */
+
+
+
 
     const onDragStart = (event: React.DragEvent, nodeType: string) => {
         event.dataTransfer.setData('application/reactflow', nodeType);
@@ -182,6 +189,45 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
         });
     };
 
+    const handleSpeedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const maxValue = 100;
+        const speed = (maxValue - parseInt(e.target.value)) * 20;
+        setSpeed(speed);
+        if (isAutoWalk) {
+            stopAutoWalk();
+            startAutoWalk();
+        }
+    };
+
+    const handleAutoWalk = async () => {
+        const newAutoWalkState = !isAutoWalk;
+        setAutoWalk(newAutoWalkState);
+
+        if (newAutoWalkState) {
+            startAutoWalk();
+            return;
+        }
+        if (!newAutoWalkState) {
+            stopAutoWalk();
+            return;
+        }
+    };
+
+    const startAutoWalk = () => {
+        if (walkingIntervalId.current !== null) return;
+
+        walkingIntervalId.current = setInterval(() => {
+            dispatch({ type: 'walk' });
+        }, speed);
+    };
+
+    const stopAutoWalk = () => {
+        if (walkingIntervalId.current !== null) {
+            clearInterval(walkingIntervalId.current);
+            walkingIntervalId.current = null;
+        }
+    };
+
     const walkAndUpdate = async () => {
         await dispatch({ type: 'walk' });
     };
@@ -228,7 +274,7 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                     type="text"
                                     placeholder="task"
                                     value={selectedNode.data.activity?.task}
-                                    onChange={e => dispatch({type: 'changeTask', payload: {activityId: selectedNode.data.activity?.id, task: e.target.value}})}
+                                    onChange={e => dispatch({ type: 'changeTask', payload: { activityId: selectedNode.data.activity?.id, task: e.target.value } })}
                                 />
                             </div>
                             <div>
@@ -238,7 +284,7 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                     type="text"
                                     placeholder="priority"
                                     value={selectedNode.data.activity?.priority}
-                                    onChange={e => dispatch({type: 'changePriority', payload: {activityId: selectedNode.data.activity?.id, priority: e.target.value}})}
+                                    onChange={e => dispatch({ type: 'changePriority', payload: { activityId: selectedNode.data.activity?.id, priority: e.target.value } })}
                                 />
                             </div>
                             <div>
@@ -337,9 +383,20 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                 className="text-white bg-blue-700 p-2 px-4 rounded shadow"
                             >Select files</button>
                             <button
-                                onClick={() => dispatch({type: 'print'})}
+                                onClick={() => dispatch({ type: 'print' })}
                                 className="text-white bg-blue-700 p-2 px-4 rounded shadow"
                             >Print Graph</button>
+                            <div>
+                                <label className="inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" checked={isAutoWalk}
+                                        onChange={handleAutoWalk} value="" className="sr-only peer" />
+                                    <div className="relative w-11 duration-500 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                    <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">AutoWalk</span>
+                                </label>
+                            </div>
+                            <div className="w-64">
+                                <Slider defaultValue={50} onChange={handleSpeedChange} placeholder="" />
+                            </div>
                             <button
                                 onClick={() => walkAndUpdate()}
                                 className="text-white bg-blue-700 p-2 px-4 rounded shadow"

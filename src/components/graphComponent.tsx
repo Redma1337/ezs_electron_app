@@ -61,7 +61,12 @@ const GraphComponent = () => {
     const [reactFlowInstance, setReactFlowInstance] = useState(null);
     const { state, dispatch } = useGraph();
 
+
     useEffect(() => {
+        dispatch({ type: 'initGraph' });
+    }, []);
+    useEffect(() => {
+
         console.log("graph state update");
 
         const backendNodeIds = new Set();
