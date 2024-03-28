@@ -37,6 +37,12 @@ function graphReducer(state: any, action: any) {
             break;
         }
 
+        case 'changeWorkload': {
+            const { activityId, workload } = action.payload;
+            graph.changeWorkload(activityId, workload);
+            break;
+        }
+
         case 'addMutex':
             const { id, mutexName } = action.payload;
             graph.addMutex(id, mutexName);

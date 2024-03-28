@@ -235,10 +235,20 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                                 <h2 className="font-semibold">Priority</h2>
                                 <input
                                     className="px-2 p-1 rounded shadow border border-slate-200 w-full"
-                                    type="text"
+                                    type="number"
                                     placeholder="priority"
                                     value={selectedNode.data.activity?.priority}
                                     onChange={e => dispatch({type: 'changePriority', payload: {activityId: selectedNode.data.activity?.id, priority: e.target.value}})}
+                                />
+                            </div>
+                            <div>
+                                <h2 className="font-semibold">Workload</h2>
+                                <input
+                                    className="px-2 p-1 rounded shadow border border-slate-200 w-full"
+                                    type="number"
+                                    placeholder="workload"
+                                    value={selectedNode.data.activity?.workload}
+                                    onChange={e => dispatch({ type: 'changeWorkload', payload: { activityId: selectedNode.data.activity?.id, workload: e.target.value}})}
                                 />
                             </div>
                             <div>

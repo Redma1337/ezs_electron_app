@@ -62,6 +62,18 @@ class Graph {
         this.mutexHandler.simultaneousTasks = simultaneousTasks;
     }
 
+    public changeWorkload(activityId: number, workload: number) {
+        const activity = this.getActivityById(activityId);
+
+        if (!workload) {
+            console.error(`no input for workload`);
+            return;
+        }
+
+        activity.workload = workload;
+        activity.resetWorkload();
+    }
+
     public removeActivity(activityToRemove: Activity) {
         // TODO: remove activity from all mutexes
         const index = this.activities.findIndex(activity => activity.id === activityToRemove.id);
