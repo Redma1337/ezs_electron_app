@@ -43,6 +43,11 @@ function graphReducer(state: any, action: any) {
             break;
         }
 
+        case 'changePcp': {
+            graph.changePcp();
+            break;
+        }
+
         case 'addMutex':
             const { id, mutexName } = action.payload;
             graph.addMutex(id, mutexName);

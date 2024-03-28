@@ -74,6 +74,11 @@ class Graph {
         activity.resetWorkload();
     }
 
+    public changePcp() {
+        const { mutexHandler } = this;
+        mutexHandler[mutexHandler.pcp ? 'enableInheritance' : 'enablePCP']();
+    }
+
     public removeActivity(activityToRemove: Activity) {
         // TODO: remove activity from all mutexes
         const index = this.activities.findIndex(activity => activity.id === activityToRemove.id);
