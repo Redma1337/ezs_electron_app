@@ -196,7 +196,28 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
             {
                 !selectedNode?.data.activity ?
                     <div className="h-full flex flex-col justify-between">
-                        <div>
+                        <div className="h-full">
+                        </div>
+                        <div className="flex flex-col p-5 gap-5 border-t border-slate-200">
+                            <h2 className="font-semibold">General Settings</h2>
+                            <div>
+                                <h2 className="font-semibold">Simultaneous Tasks</h2>
+                                <input
+                                    className="px-2 p-1 rounded shadow border border-slate-200 w-full"
+                                    type="text"
+                                    placeholder="simultaneousTasks"
+                                    value={state.graph.mutexHandler.simultaneousTasks}
+                                    onChange={e => dispatch({ type: 'changeSimultaneousTasks', payload: { simultaneousTasks: e.target.value } })}
+                                />
+                            </div>
+                            <div>
+                                <h2 className="font-semibold">PCP / Inheritance</h2>
+                                <button
+                                    onClick={() => dispatch({ type: 'changePcp' })}
+                                    className={`${state.graph.mutexHandler.pcp ? 'bg-green-500 hover:bg-green-700' : 'bg-red-500 hover:bg-red-700'} text-white py-1 px-2 rounded w-full`}>
+                                    {state.graph.mutexHandler.pcp ? 'PCP' : 'Inheritance'}
+                                </button>
+                            </div>
                         </div>
                         <div className="flex flex-col p-5 gap-5 border-t border-slate-200">
                             <h2 className="font-semibold">Components</h2>
@@ -220,7 +241,7 @@ const OptionsComponent = ({ selectedNode, nodes, onUpdateNode }: OptionsComponen
                     </div>
                     :
                     <div className="h-full flex flex-col justify-between">
-                        <div className="p-5 flex flex-col gap-5">
+                        <div className="p-5 flex flex-col gap-5 h-full">
                             <div>
                                 <h2 className="font-semibold">Task</h2>
                                 <input
